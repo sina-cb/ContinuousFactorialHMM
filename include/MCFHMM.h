@@ -6,9 +6,9 @@ using namespace std;
 #ifndef MCFHMM_H
 #define MCFHMM_H
 
-typedef tuple<double, double, double> pi_type;
-typedef tuple<double, double, double, double, double, double> m_type;
-typedef tuple<double, double, double, double, double, double> v_type;
+typedef vector<double> pi_type;
+typedef vector<double> m_type;
+typedef vector<double> v_type;
 
 class MCFHMM{
 
