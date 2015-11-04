@@ -5,9 +5,9 @@
 using namespace std;
 
 MCFHMM::MCFHMM(){
-    pi = new vector<pi_type>();
-    m = new vector<m_type>();
-    v = new vector<v_type>();
+    pi = new vector<Sample>();
+    m = new vector<Sample>();
+    v = new vector<Sample>();
 }
 
 
@@ -23,35 +23,35 @@ void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v){
 
 
     for (int i = 0; i < sample_size_pi; i++){
-        pi_type sample;
-        sample.push_back(X_dist(gen));
-        sample.push_back(Y_dist(gen));
-        sample.push_back(TH_dist(gen));
-        sample.push_back(P_dist(gen));
+        Sample sample;
+        sample.values.push_back(X_dist(gen));
+        sample.values.push_back(Y_dist(gen));
+        sample.values.push_back(TH_dist(gen));
+        sample.p = 1.0 / sample_size_pi; // P_dist(gen);
         pi->push_back(sample);
     }
 
     for (int i = 0; i < sample_size_m; i++){
-        m_type sample;
-        sample.push_back(X_dist(gen));
-        sample.push_back(Y_dist(gen));
-        sample.push_back(TH_dist(gen));
-        sample.push_back(X_dist(gen));
-        sample.push_back(Y_dist(gen));
-        sample.push_back(TH_dist(gen));
-        sample.push_back(P_dist(gen));
+        Sample sample;
+        sample.values.push_back(X_dist(gen));
+        sample.values.push_back(Y_dist(gen));
+        sample.values.push_back(TH_dist(gen));
+        sample.values.push_back(X_dist(gen));
+        sample.values.push_back(Y_dist(gen));
+        sample.values.push_back(TH_dist(gen));
+        sample.p = 1.0 / sample_size_m; // P_dist(gen);
         m->push_back(sample);
     }
 
     for (int i = 0; i < sample_size_v; i++){
-        v_type sample;
-        sample.push_back(X_dist(gen));
-        sample.push_back(Y_dist(gen));
-        sample.push_back(TH_dist(gen));
-        sample.push_back(X_dist(gen));
-        sample.push_back(Y_dist(gen));
-        sample.push_back(TH_dist(gen));
-        sample.push_back(P_dist(gen));
+        Sample sample;
+        sample.values.push_back(X_dist(gen));
+        sample.values.push_back(Y_dist(gen));
+        sample.values.push_back(TH_dist(gen));
+        sample.values.push_back(X_dist(gen));
+        sample.values.push_back(Y_dist(gen));
+        sample.values.push_back(TH_dist(gen));
+        sample.p = 1.0 / sample_size_v; // P_dist(gen);
         v->push_back(sample);
     }
 

@@ -21,32 +21,32 @@ find_package(LibXml2 2.6.0 REQUIRED)
 # Find Armadillo library
 find_package(Armadillo REQUIRED)
 
-# The ML_Pack library.
-# Store the mlpack include directory in MLPACK_INCLUDE_DIR.
-# The PATHS variable may be specified to give hints for where to find core.hpp.
-find_path(MLPACK_INCLUDE_DIR
-  NAMES core.hpp prereqs.hpp
-  PATHS /usr/local/include/mlpack /usr/local/include/
+# The Google Glog_Pack library.
+# Store the glog include directory in GLOG_INCLUDE_DIR.
+# The PATHS variable may be specified to give hints for where to find logging.h
+find_path(GLOG_INCLUDE_DIR
+  NAMES logging.h
+  PATHS /usr/local/include/glog /usr/local/include/ /usr/include/glog/ /usr/include/
 )
 
-if(MLPACK_INCLUDE_DIR)
-	message(STATUS "Found MLPack include directory")
+if(GLOG_INCLUDE_DIR)
+        message(STATUS "Found GLog include directory")
 else()
-	message(STATUS "ERROR: Could not find MLPack include directory")
+        message(STATUS "ERROR: Could not find GLog include directory")
 endif()
 
 # Find libmlpack.so (or equivalent) and store it in MLPACK_LIBRARY.
 # If this example script were smarter, it would also find other dependencies of mlpack and store them in
 # an MLPACK_LIBRARIES variable instead.
-find_library(MLPACK_LIBRARY
-  NAMES mlpack
+find_library(GLOG_LIBRARY
+  NAMES glog libglog
   PATHS /usr/lib64/ /usr/lib/ /usr/local/lib64/ /usr/local/
 )
 
-if(MLPACK_LIBRARY)
-	message(STATUS "Found MLPack link libraries")
+if(GLOG_LIBRARY)
+        message(STATUS "Found GLog link libraries")
 else()
-	message(STATUS "ERROR: Could not find MLPack link libraries")
+        message(STATUS "ERROR: Could not find GLog link libraries")
 endif()
 
 # Define the framework files.
@@ -55,24 +55,30 @@ set(SRC
 	src/Sampler.cpp
 	src/MCFHMM.cpp
 	src/DETree.cpp
+	src/Sample.cpp
 )
 
 set(HDRs
 	include/Sampler.h
 	include/MCFHMM.h
 	include/DETree.h
+	include/Sample.h
 )
 
 include_directories (
 	include/
-	${MLPACK_INCLUDE_DIR}
+        ${GLOG_INCLUDE_DIR}
 	${LIBXML2_INCLUDE_DIR}
 	${ARMADILLO_INCLUDE_DIRS}
+        ${BOOST_INCLUDE_DIR}
+        ${THREADS_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME} ${SRC} ${HDRs})
 
 target_link_libraries(${PROJECT_NAME} 
-	${MLPACK_LIBRARY}
+        ${GLOG_LIBRARY}
 	${LIBXML2_LIBRARIES}
+        ${BOOST_LIBRARY}
+        ${THREADS_LIBRARY}
 )

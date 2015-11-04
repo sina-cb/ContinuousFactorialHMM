@@ -1,23 +1,20 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include "Sample.h"
 using namespace std;
 
 #ifndef MCFHMM_H
 #define MCFHMM_H
-
-typedef vector<double> pi_type;
-typedef vector<double> m_type;
-typedef vector<double> v_type;
 
 class MCFHMM{
 
 private:
 
     // Model parameters
-    vector<pi_type> *pi;    // Initial State Distribution
-    vector<m_type> *m;      // Transition Model
-    vector<v_type> *v;      // Observation Model
+    vector<Sample> *pi;    // Initial State Distribution
+    vector<Sample> *m;      // Transition Model
+    vector<Sample> *v;      // Observation Model
 
 
 public:
@@ -25,27 +22,27 @@ public:
 
     void init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v);
 
-    vector<pi_type>* get_pi(){
+    vector<Sample>* get_pi(){
        return pi;
     }
 
-    void set_pi(vector<pi_type> *pi){
+    void set_pi(vector<Sample> *pi){
         this->pi = pi;
     }
 
-    vector<m_type>* get_m(){
+    vector<Sample>* get_m(){
        return m;
     }
 
-    void set_m(vector<m_type> *m){
+    void set_m(vector<Sample> *m){
         this->m = m;
     }
 
-    vector<v_type>* get_v(){
+    vector<Sample>* get_v(){
        return v;
     }
 
-    void set_v(vector<v_type> *v){
+    void set_v(vector<Sample> *v){
         this->v = v;
     }
 
