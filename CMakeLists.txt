@@ -56,6 +56,7 @@ set(SRC
 	src/MCFHMM.cpp
 	src/DETree.cpp
 	src/Sample.cpp
+	src/Observation.cpp
 )
 
 set(HDRs
@@ -63,6 +64,7 @@ set(HDRs
 	include/MCFHMM.h
 	include/DETree.h
 	include/Sample.h
+	include/Observation.h
 )
 
 include_directories (

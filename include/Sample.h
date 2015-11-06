@@ -1,5 +1,7 @@
 #include <vector>
 #include <iostream>
+#include <string>
+#include <sstream>
 using namespace std;
 
 #ifndef SAMPLE_H
@@ -11,7 +13,9 @@ public:
     vector<double> values;
     double p;
 
+    void init_rand(vector<double> *low_limit, vector<double> *high_limit);
     size_t size();
+    string str();
 };
 
 #endif

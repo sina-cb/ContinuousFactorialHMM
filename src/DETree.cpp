@@ -11,11 +11,48 @@ DETree::DETree(){
     LOG(INFO) << "The DETree is not created, you should use create_tree explicitly to initialize the DETree";
 }
 
-DETree::DETree(const vector<Sample> &sample_set){
-    create_tree(sample_set);
+DETree::DETree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
+    create_tree(sample_set, sample_low, sample_high);
 }
 
-void DETree::create_tree(const vector<Sample> &sample_set){
+double DETree::density_value(Sample sample){
+
+    DETreeNode *node = this->get_root();
+
+    bool cond = !node->leaf_node;
+    while(cond){
+        int index = node->max_diff_index;
+
+        cond = !node->leaf_node;
+
+        if (cond && sample.values[index] < node->cut_value){
+            node = node->left_child;
+        }else if (cond){
+            node = node->right_child;
+        }
+    }
+
+    cond = !(node->node_type == 'R');
+    double p = 0.0;
+    double temp_rho = 1.0;
+    while (cond){
+        if (node->node_type != 'R'){
+            p = p + (1 - rho) * temp_rho * node->node_sigma;
+        } else {
+            p = p + temp_rho * node->node_sigma;
+        }
+        temp_rho = temp_rho * rho;
+
+        cond = !(node->node_type == 'R');
+        node = node->parent;
+    }
+
+    return p;
+}
+
+void DETree::create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
+    this->samples_low_limit = sample_low;
+    this->samples_high_limit = sample_high;
     root = new DETreeNode(sample_set, 0, 'R');
 }
 
@@ -58,8 +95,8 @@ void DETree::depth_first(vector<DETreeNode *> *& nodes, DETreeNode *current_node
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-DETreeNode DETree::get_root(){
-    return *(root);
+DETreeNode* DETree::get_root(){
+    return root;
 }
 
 DETreeNode::DETreeNode(){
@@ -79,11 +116,6 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
     this->level = level;
 
     LOG(INFO) << endl << "SAMPLES AT LEVEL " << level << endl << str() << "END OF SAMPLES";
-
-    if (samples.size() <= 1){
-        leaf_node = true;
-        return;
-    }
 
     // Finding the subsets
     vector<double> min_vals;
@@ -115,6 +147,14 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
         }
     }
 
+    max_diff_max_value = max_vals[max_diff_index];
+    max_diff_min_value = min_vals[max_diff_index];
+
+    if (samples.size() <= 1){
+        leaf_node = true;
+        return;
+    }
+
     // divide the samples
     std::sort(samples.begin(), samples.end(),
               [&, this](const Sample& a, const Sample& b) {
@@ -144,6 +184,9 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
 
     this->left_child = new DETreeNode(sub_sample_left, level + 1, 'l');
     this->right_child = new DETreeNode(sub_sample_right, level + 1, 'r');
+
+    this->left_child->parent = this;
+    this->right_child->parent = this;
 
 }
 

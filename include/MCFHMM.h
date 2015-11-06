@@ -2,6 +2,7 @@
 #include <vector>
 #include <tuple>
 #include "Sample.h"
+#include "Observation.h"
 using namespace std;
 
 #ifndef MCFHMM_H
@@ -16,11 +17,25 @@ private:
     vector<Sample> *m;      // Transition Model
     vector<Sample> *v;      // Observation Model
 
+    vector<double> *pi_low_limit = NULL;
+    vector<double> *pi_high_limit = NULL;
+
+    vector<double> *m_low_limit = NULL;
+    vector<double> *m_high_limit = NULL;
+
+    vector<double> *v_low_limit = NULL;
+    vector<double> *v_high_limit = NULL;
+
 
 public:
     MCFHMM();
 
     void init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v);
+    void set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
+                    vector<double> *m_low_limit, vector<double> *m_high_limit,
+                    vector<double> *v_low_limit, vector<double> *v_high_limit
+                    );
+    void learn_hmm(vector<Observation> *observations, int max_iteration, int N);
 
     vector<Sample>* get_pi(){
        return pi;
