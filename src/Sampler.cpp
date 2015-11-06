@@ -35,10 +35,41 @@ Sample Sampler::sample(DETree *tree){
     return sample;
 }
 
-vector<Sample> * Sampler::likelihood_weighted_sampler(vector<Sample> &sample_set){
+Sample Sampler::likelihood_weighted_sampler(vector<Sample> &sample_set){
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine gen(seed);
     uniform_real_distribution<double> dist(0, 1.0);
+
+    vector<double> low_p;
+    vector<double> high_p;
+
+    low_p.push_back(0.0);
+    high_p.push_back(sample_set[0].p);
+    for (size_t i = 1; i < sample_set.size(); i++){
+        low_p.push_back(high_p[i - 1]);
+        high_p.push_back(high_p[i - 1] + sample_set[i].p);
+    }
+
+    double temp_p = dist(gen);
+    int index = 0;
+    for (size_t j = 0; j < low_p.size(); j++){
+        if (temp_p >= low_p[j] && temp_p <= high_p[j]){
+            index = j;
+            break;
+        }
+    }
+
+    return sample_set[index];
+}
+
+vector<Sample> * Sampler::likelihood_weighted_resampler(vector<Sample> &sample_set, int size){
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine gen(seed);
+    uniform_real_distribution<double> dist(0, 1.0);
+
+    if (size == -1){
+        size = sample_set.size();
+    }
 
     vector<Sample> temp = sample_set;
 
@@ -53,7 +84,7 @@ vector<Sample> * Sampler::likelihood_weighted_sampler(vector<Sample> &sample_set
     }
 
     sample_set.clear();
-    for (size_t i = 0; i < temp.size(); i++){
+    for (size_t i = 0; i < size; i++){
         double temp_p = dist(gen);
         int index = 0;
         for (size_t j = 0; j < low_p.size(); j++){

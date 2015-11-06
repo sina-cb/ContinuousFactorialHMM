@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
     hmm.init_hmm(N, N, N);
     hmm.learn_hmm(&obs, max_iteration, N);
 
+
 //    root.print_samples();
 //    pi_tree.left_child(root).print_samples();
 

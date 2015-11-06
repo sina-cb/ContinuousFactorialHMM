@@ -11,7 +11,6 @@ MCFHMM::MCFHMM(){
 }
 
 void MCFHMM::learn_hmm(vector<Observation> *observations, int max_iteration, int N){
-
     Sampler sampler;
 
     DETree pi_tree;
@@ -28,21 +27,6 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, int max_iteration, int
         LOG(INFO) << "Probability: " << pi_tree.density_value(temp);
     }
 
-    cout << "First \n\n";
-    for (size_t i = 0; i < pi->size(); i++){
-        for (size_t j = 0; j < (*pi)[i].values.size(); j++){
-            cout << (*pi)[i].values[j] << " ";
-        }
-        cout << endl;
-    }
-    pi = sampler.likelihood_weighted_sampler(*pi);
-    cout << "Then \n\n";
-    for (size_t i = 0; i < pi->size(); i++){
-        for (size_t j = 0; j < (*pi)[i].values.size(); j++){
-            cout << (*pi)[i].values[j] << " ";
-        }
-        cout << endl;
-    }
 }
 
 void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
