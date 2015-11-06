@@ -38,13 +38,31 @@ Sample Sampler::sample(DETree *tree){
 vector<Sample> * Sampler::likelihood_weighted_sampler(vector<Sample> &sample_set){
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine gen(seed);
-    uniform_real_distribution<double> dist(0, sample_set.size());
+    uniform_real_distribution<double> dist(0, 1.0);
 
     vector<Sample> temp = sample_set;
 
+    vector<double> low_p;
+    vector<double> high_p;
+
+    low_p.push_back(0.0);
+    high_p.push_back(temp[0].p);
+    for (size_t i = 1; i < temp.size(); i++){
+        low_p.push_back(high_p[i - 1]);
+        high_p.push_back(high_p[i - 1] + temp[i].p);
+    }
+
     sample_set.clear();
     for (size_t i = 0; i < temp.size(); i++){
-        int index = dist(gen);
+        double temp_p = dist(gen);
+        int index = 0;
+        for (size_t j = 0; j < low_p.size(); j++){
+            if (temp_p >= low_p[j] && temp_p <= high_p[j]){
+                index = j;
+                break;
+            }
+        }
+
         sample_set.push_back(temp[index]);
     }
 

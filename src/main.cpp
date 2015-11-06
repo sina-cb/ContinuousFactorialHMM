@@ -51,7 +51,7 @@ void init_GLOG(int argc, char* argv[]){
     InitGoogleLogging(argv[0]);
     FLAGS_stderrthreshold = 0;
     FLAGS_log_dir = ".";
-    FLAGS_minloglevel = 0;
+    FLAGS_minloglevel = 2;
     //FLAGS_logtostderr = true;
     //SetLogDestination(google::INFO, "./info");
 }
