@@ -1,6 +1,5 @@
 #include "MCFHMM.h"
 #include <cmath>
-#include "DETree.h"
 #include "Sampler.h"
 using namespace std;
 
@@ -13,18 +12,39 @@ MCFHMM::MCFHMM(){
 void MCFHMM::learn_hmm(vector<Observation> *observations, int max_iteration, int N){
     Sampler sampler;
 
-    DETree pi_tree;
-    DETree m_tree;
-    DETree v_tree;
+    init_hmm(N, N, N, 0.2);
 
-    pi_tree.create_tree(*pi, pi_low_limit, pi_high_limit);
-    m_tree.create_tree(*m, m_low_limit, m_high_limit);
-    v_tree.create_tree(*v, v_low_limit, v_high_limit);
+    vector<vector<Sample> > alpha;
+    vector<vector<Sample> > beta;
+    vector<vector<Sample> > gamma;
 
-    for (size_t i = 0; i < 100; i++){
-        Sample temp = sampler.sample(&pi_tree);
-        LOG(INFO) << "SAMPLE: " << temp.str();
-        LOG(INFO) << "Probability: " << pi_tree.density_value(temp);
+    /////////////////E STEP/////////////////
+    {
+        alpha.push_back(*pi);
+
+        /////////////////Compute Alpha/////////////////
+        for (size_t t = 1; t < observations->size(); t++){
+
+            vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha[t - 1], N);
+            double sum_densities = 0.0;
+            for (size_t i = 0; i < temp.size(); i++){
+                Sample x = sampler.sample_given(m_tree, temp[i]);
+
+                Sample v_temp = (*observations)[t].combine(x);
+                double density = v_tree->density_value(v_temp, rho);
+
+                sum_densities += density;
+                temp[i] = x;
+            }
+
+            for (size_t i = 0; i < temp.size(); i++){
+                temp[i].p = temp[i].p / sum_densities;
+            }
+
+
+            break;
+        }
+
     }
 
 }
@@ -44,7 +64,7 @@ void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_li
     this->v_high_limit = v_high_limit;
 }
 
-void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v){
+void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v, double rho_init){
 
     if (pi_low_limit == NULL){
         LOG(FATAL) << "Please set the limits first and then run this method!!!";
@@ -70,5 +90,11 @@ void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v){
         sample.p = 1.0 / sample_size_v;
         v->push_back(sample);
     }
+
+    rho = rho_init;
+
+    pi_tree = new DETree(*pi, pi_low_limit, pi_high_limit);
+    m_tree = new DETree(*m, m_low_limit, m_high_limit);
+    v_tree = new DETree(*v, v_low_limit, v_high_limit);
 
 }

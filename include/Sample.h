@@ -14,6 +14,7 @@ public:
     double p;
 
     void init_rand(vector<double> *low_limit, vector<double> *high_limit);
+    Sample combine(vector<double> second);
     size_t size();
     string str();
 };

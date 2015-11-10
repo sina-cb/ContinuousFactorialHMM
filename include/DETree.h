@@ -15,7 +15,7 @@ public:
     DETree(vector<Sample> const &sample_set, vector<double> *sample_low, vector<double> *sample_high);
 
     void create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
-    double density_value(Sample sample);
+    double density_value(Sample sample, double rho);
 
     DETreeNode* get_root();
 
@@ -30,7 +30,6 @@ private:
     DETreeNode *root;
 
     void depth_first(vector<DETreeNode*> *& nodes, DETreeNode* current_node);
-    double rho = 0.2;
 };
 
 class DETreeNode{

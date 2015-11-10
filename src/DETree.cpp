@@ -15,7 +15,7 @@ DETree::DETree(const vector<Sample> &sample_set, vector<double> *sample_low, vec
     create_tree(sample_set, sample_low, sample_high);
 }
 
-double DETree::density_value(Sample sample){
+double DETree::density_value(Sample sample, double rho){
 
     DETreeNode *node = this->get_root();
 
@@ -51,8 +51,8 @@ double DETree::density_value(Sample sample){
 }
 
 void DETree::create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
-    this->samples_low_limit = sample_low;
-    this->samples_high_limit = sample_high;
+    samples_low_limit = sample_low;
+    samples_high_limit = sample_high;
     root = new DETreeNode(sample_set, 0, 'R');
 }
 

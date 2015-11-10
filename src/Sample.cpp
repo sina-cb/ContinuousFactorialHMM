@@ -15,6 +15,19 @@ void Sample::init_rand(vector<double> *low_limit, vector<double> *high_limit){
     }
 }
 
+Sample Sample::combine(vector<double> second){
+    Sample result;
+
+    for (size_t i = 0; i < this->size(); i++){
+        result.values.push_back(values[i]);
+    }
+    for (size_t i = 0; i < second.size(); i++){
+        result.values.push_back(second[i]);
+    }
+
+    return result;
+}
+
 string Sample::str(){
     stringbuf buf;
     ostream os (&buf);
