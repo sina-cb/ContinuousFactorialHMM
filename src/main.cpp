@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     MCFHMM hmm;
 
     int N = 5;
-    int max_iteration = 2;
+    int max_iteration = 20;
 
     hmm.set_limits(&pi_low_limits, &pi_high_limits, &m_low_limits, &m_high_limits, &v_low_limits, &v_high_limits);
     hmm.learn_hmm(&obs, max_iteration, N);

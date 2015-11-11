@@ -39,7 +39,7 @@ Sample Sampler::sample_given(DETree *tree, Sample &given){
     }
 
     Sample result;
-    for (size_t i = 0; i < (int)given.size(); i++){
+    for (int i = 0; i < (int)given.size(); i++){
         result.values.push_back(sample.values[i]);
     }
 
@@ -104,6 +104,24 @@ Sample Sampler::likelihood_weighted_sampler(vector<Sample> &sample_set){
     return sample_set[index];
 }
 
+vector<Sample> Sampler::uniform_sampling(vector<double> *sample_low, vector<double> *sample_high, size_t N){
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine gen(seed);
+
+    vector<Sample> results;
+
+    for (size_t i = 0; i < N; i++){
+        Sample sample;
+        for (size_t j = 0; j < sample_low->size(); j++){
+            uniform_real_distribution<double> dist((*sample_low)[j], (*sample_high)[j]);
+            sample.values.push_back(dist(gen));
+        }
+        results.push_back(sample);
+    }
+
+    return results;
+}
+
 vector<Sample> Sampler::likelihood_weighted_resampler(vector<Sample> &sample_set, int size){
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine gen(seed);
@@ -141,10 +159,10 @@ vector<Sample> Sampler::likelihood_weighted_resampler(vector<Sample> &sample_set
     return temp;
 }
 
-vector<Sample> * Sampler::resample_from(DETree *tree, size_t sample_set_size){
-    vector<Sample> * results = new vector<Sample>();
+vector<Sample> Sampler::resample_from(DETree *tree, size_t sample_set_size){
+    vector<Sample> results;
     for (size_t i = 0; i < sample_set_size; i++){
-        results->push_back(sample(tree));
+        results.push_back(sample(tree));
     }
     return results;
 }

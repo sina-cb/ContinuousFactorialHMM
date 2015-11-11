@@ -32,6 +32,7 @@ private:
     vector<double> *v_high_limit = NULL;
 
     double rho = 1.0;
+    double eta = 1.2;
 
 
 public:
@@ -42,7 +43,7 @@ public:
                     vector<double> *m_low_limit, vector<double> *m_high_limit,
                     vector<double> *v_low_limit, vector<double> *v_high_limit
                     );
-    void learn_hmm(vector<Observation> *observations, int max_iteration, int N);
+    void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
 
     vector<Sample>* get_pi(){
        return pi;
