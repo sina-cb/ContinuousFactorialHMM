@@ -115,8 +115,6 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
     this->node_type = node_type;
     this->level = level;
 
-    LOG(INFO) << endl << "SAMPLES AT LEVEL " << level << endl << str() << "END OF SAMPLES";
-
     // Finding the subsets
     vector<double> min_vals;
     vector<double> max_vals;
@@ -170,6 +168,10 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
         }
     }
 
+    if (cut_index == samples.size() - 1){
+        cut_index--;
+    }
+
     vector<Sample> sub_sample_left (
                 samples.begin(),
                 samples.begin() + cut_index + 1
@@ -192,7 +194,7 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
 
 string DETreeNode::str(){
     stringbuf buf;
-    ostream os (&buf);
+    ostream os(&buf);
     for (size_t i = 0; i < samples.size(); i++){
         for (size_t j = 0; j < samples[0].size(); j++){
             os << samples[i].values[j] << "\t";

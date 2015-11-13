@@ -18,9 +18,9 @@ private:
     vector<Sample> *m;      // Transition Model
     vector<Sample> *v;      // Observation Model
 
-    DETree *pi_tree;        //Density Tree used for PI distribution
-    DETree *v_tree;         //Density Tree used for V distribution
-    DETree *m_tree;         //Density Tree used for M distribution
+    DETree *pi_tree;        // Density Tree used for PI distribution
+    DETree *v_tree;         // Density Tree used for V distribution
+    DETree *m_tree;         // Density Tree used for M distribution
 
     vector<double> *pi_low_limit = NULL;
     vector<double> *pi_high_limit = NULL;
@@ -32,42 +32,22 @@ private:
     vector<double> *v_high_limit = NULL;
 
     double rho = 1.0;
+    double rho_bar = 0.5;
     double eta = 1.2;
+
+    size_t max_sample_size = 100;
 
 
 public:
     MCFHMM();
 
-    void init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v, double rho_init);
+    void init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v);
     void set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
                     vector<double> *m_low_limit, vector<double> *m_high_limit,
                     vector<double> *v_low_limit, vector<double> *v_high_limit
                     );
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
-
-    vector<Sample>* get_pi(){
-       return pi;
-    }
-
-    void set_pi(vector<Sample> *pi){
-        this->pi = pi;
-    }
-
-    vector<Sample>* get_m(){
-       return m;
-    }
-
-    void set_m(vector<Sample> *m){
-        this->m = m;
-    }
-
-    vector<Sample>* get_v(){
-       return v;
-    }
-
-    void set_v(vector<Sample> *v){
-        this->v = v;
-    }
+    vector<vector<Sample> > forward(vector<Observation> *observations, size_t N);
 
 };
 

@@ -162,7 +162,9 @@ vector<Sample> Sampler::likelihood_weighted_resampler(vector<Sample> &sample_set
 vector<Sample> Sampler::resample_from(DETree *tree, size_t sample_set_size){
     vector<Sample> results;
     for (size_t i = 0; i < sample_set_size; i++){
-        results.push_back(sample(tree));
+        Sample smp = sample(tree);
+        smp.p = 1.0 / sample_set_size;
+        results.push_back(smp);
     }
     return results;
 }

@@ -57,6 +57,7 @@ set(SRC
 	src/DETree.cpp
 	src/Sample.cpp
 	src/Observation.cpp
+	src/Timer.cpp
 )
 
 set(HDRs
@@ -65,6 +66,7 @@ set(HDRs
 	include/DETree.h
 	include/Sample.h
 	include/Observation.h
+	include/Timer.h
 )
 
 include_directories (

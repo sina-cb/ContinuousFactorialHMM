@@ -3,6 +3,7 @@
 #include "Sampler.h"
 #include <random>
 #include <chrono>
+#include <glog/logging.h>
 using namespace std;
 
 MCFHMM::MCFHMM(){
@@ -11,11 +12,49 @@ MCFHMM::MCFHMM(){
     v = new vector<Sample>();
 }
 
+vector<vector<Sample> > MCFHMM::forward(vector<Observation> *observations, size_t N){
+    vector<vector<Sample> > alpha_samples;
+    Sampler sampler;
+    size_t T = observations->size();
+
+    alpha_samples.push_back(sampler.resample_from(pi_tree, N));
+
+    // STEP 2
+    for (size_t t = 1; t <= T; t++){
+        // STEP 2(a)
+        vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[t - 1], N);
+        double sum_densities = 0.0;
+
+        for (size_t i = 0; i < temp.size(); i++){
+            // STEP 2(b)
+            Sample x = sampler.sample_given(m_tree, temp[i]);
+
+            // STEP 2(c)
+            Sample v_temp = (*observations)[t].combine(x);
+            double density = v_tree->density_value(v_temp, rho);
+            x.p = density;
+
+            sum_densities += density;
+            temp[i] = x;
+        }
+
+        // Normalizing the probabilities
+        for (size_t i = 0; i < temp.size(); i++){
+            temp[i].p = temp[i].p / sum_densities;
+        }
+
+        // STEP 2(d)
+        alpha_samples.push_back(temp);
+    }
+
+    return alpha_samples;
+}
+
 void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){
     Sampler sampler;
     size_t T = observations->size();
 
-    init_hmm(N, N, N, 0.2);
+    init_hmm(N, N, N);
 
     bool cond = true;
     size_t iteration = 0;
@@ -110,6 +149,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                     Sample sample = sampler.likelihood_weighted_sampler(alpha_samples[t]);
                     sample.p = beta_trees[index_t].density_value(sample, rho);
                     sum_density += sample.p;
+                    vector<vector<Sample> > alpha_samples;
                     temp.push_back(sample);
                 }
 
@@ -181,15 +221,17 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
         }
 
         /////////////////ANNEALING/////////////////
-        rho = rho;
+        rho = rho * rho_bar;
 
         /////////////////SAMPLE SET SIZE/////////////////
-        N = N * eta;
+        if (N < (int)max_sample_size)
+            N = N * eta;
 
         /////////////////STOP CONDITION/////////////////
+        LOG(INFO) << "Iteration " << iteration + 1 << " Finished!";
         iteration++;
         if (iteration >= max_iteration){
-            //cond = false;
+            cond = false;
         }
     }
 
@@ -210,7 +252,7 @@ void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_li
     this->v_high_limit = v_high_limit;
 }
 
-void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v, double rho_init){
+void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v){
 
     if (pi_low_limit == NULL){
         LOG(FATAL) << "Please set the limits first and then run this method!!!";
@@ -236,8 +278,6 @@ void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v, 
         sample.p = 1.0 / sample_size_v;
         v->push_back(sample);
     }
-
-    rho = rho_init;
 
     pi_tree = new DETree(*pi, pi_low_limit, pi_high_limit);
     m_tree = new DETree(*m, m_low_limit, m_high_limit);
