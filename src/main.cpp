@@ -72,60 +72,44 @@ void init_GLOG(int argc, char* argv[]){
 void init_observations(size_t size){
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine gen(seed);
-    uniform_real_distribution<double> dist(-.1, 0.1);
-    double x = 0;
-    double y = 0;
-    double th = 0;
+    uniform_real_distribution<double> dist(-.1, .1);
+    double x = 5;
+    double y = 5;
+    double z = 5;
     obs.clear();
     for (size_t i = 0; i < size / 2; i++){
         Observation temp1;
-        temp1.values.push_back(x + dist(gen));
-        temp1.values.push_back(y + dist(gen));
-        temp1.values.push_back(th + dist(gen));
+        temp1.values.push_back(.1 + dist(gen));
+        temp1.values.push_back(.1 + dist(gen));
+        temp1.values.push_back(.1 + dist(gen));
         obs.push_back(temp1);
 
         Observation temp2;
-        temp2.values.push_back( x + 10.0 + dist(gen));
-        temp2.values.push_back( y + 10.0 + dist(gen));
-        temp2.values.push_back(th + 10.0 + dist(gen));
+        temp2.values.push_back(x + dist(gen));
+        temp2.values.push_back(y + dist(gen));
+        temp2.values.push_back(z + dist(gen));
         obs.push_back(temp2);
     }
 }
 
 void init_limits(){
     pi_low_limits.push_back(0);
-    pi_low_limits.push_back(0);
-    pi_low_limits.push_back(0);
 
-    pi_high_limits.push_back(10);
-    pi_high_limits.push_back(10);
-    pi_high_limits.push_back(2 * M_PI);
+    pi_high_limits.push_back(1);
 
     m_low_limits.push_back(0);
     m_low_limits.push_back(0);
-    m_low_limits.push_back(0);
-    m_low_limits.push_back(0);
-    m_low_limits.push_back(0);
-    m_low_limits.push_back(0);
 
-    m_high_limits.push_back(10);
-    m_high_limits.push_back(10);
-    m_high_limits.push_back(2 * M_PI);
-    m_high_limits.push_back(10);
-    m_high_limits.push_back(10);
-    m_high_limits.push_back(2 * M_PI);
+    m_high_limits.push_back(1);
+    m_high_limits.push_back(1);
 
     v_low_limits.push_back(0);
     v_low_limits.push_back(0);
     v_low_limits.push_back(0);
     v_low_limits.push_back(0);
-    v_low_limits.push_back(0);
-    v_low_limits.push_back(0);
 
-    v_high_limits.push_back(10);
-    v_high_limits.push_back(10);
-    v_high_limits.push_back(2 * M_PI);
-    v_high_limits.push_back(10);
-    v_high_limits.push_back(10);
-    v_high_limits.push_back(2 * M_PI);
+    v_high_limits.push_back(6);
+    v_high_limits.push_back(6);
+    v_high_limits.push_back(6);
+    v_high_limits.push_back(1);
 }
