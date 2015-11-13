@@ -51,6 +51,8 @@ int main(int argc, char* argv[])
 
     vector<vector<Sample> > forward = hmm.forward(&obs, 100);
 
+    // BRANCH
+
     return 0;
 }
 
