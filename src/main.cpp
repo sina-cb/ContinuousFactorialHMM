@@ -76,7 +76,6 @@ int main(int argc, char* argv[])
             }
         }
 
-
 //        vector<Sample> temp = forward[i];
 //        DETree tree(temp, &pi_low_limits, &pi_high_limits);
 //        Sample state;
