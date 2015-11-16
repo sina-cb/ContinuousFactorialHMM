@@ -12,7 +12,7 @@ class DETree{
 
 public:
     DETree();
-    DETree(vector<Sample> const &sample_set, vector<double> *sample_low, vector<double> *sample_high);
+    DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
 
     void create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
     double density_value(Sample sample, double rho);
@@ -55,6 +55,8 @@ public:
     int cut_index;
     int max_diff_index;
     double max_diff;
+
+    double min_diff_interval = 0.05;
 
     DETreeNode *left_child;
     DETreeNode *right_child;

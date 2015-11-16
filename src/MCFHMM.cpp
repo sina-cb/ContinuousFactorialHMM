@@ -221,7 +221,8 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
         }
 
         /////////////////ANNEALING/////////////////
-        rho = rho * rho_bar;
+        if (rho > 0.01)
+            rho = rho * rho_bar;
 
         /////////////////SAMPLE SET SIZE/////////////////
         if (N < (int)max_sample_size)
@@ -283,4 +284,8 @@ void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v){
     m_tree = new DETree(*m, m_low_limit, m_high_limit);
     v_tree = new DETree(*v, v_low_limit, v_high_limit);
 
+}
+
+double MCFHMM::_rho(){
+    return this->rho;
 }

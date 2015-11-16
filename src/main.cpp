@@ -33,8 +33,8 @@ int main(int argc, char* argv[])
 
     MCFHMM hmm;
 
-    int N = 20;
-    int max_iteration = 20;
+    int N = 200;
+    int max_iteration = 100;
 
     hmm.set_limits(&pi_low_limits, &pi_high_limits, &m_low_limits, &m_high_limits, &v_low_limits, &v_high_limits);
 
@@ -50,6 +50,41 @@ int main(int argc, char* argv[])
     init_observations(10);
 
     vector<vector<Sample> > forward = hmm.forward(&obs, 100);
+
+    int tr = 0;
+    for (size_t i = 1; i < forward.size(); i++){
+        double state0 = 0.0;
+        double state1 = 0.0;
+        for (size_t j = 0; j < forward[i].size(); j++){
+            if (forward[i][j].values[0] > 0.5){
+                state1 += forward[i][j].p;
+            }else{
+                state0 += forward[i][j].p;
+            }
+        }
+
+        cout << "Observation " << i << endl;
+        cout << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
+
+        if (i % 2 == 1){
+            if (state0 > state1){
+               tr++;
+            }
+        }else{
+            if (state1 > state0){
+               tr++;
+            }
+        }
+
+
+//        vector<Sample> temp = forward[i];
+//        DETree tree(temp, &pi_low_limits, &pi_high_limits);
+//        Sample state;
+//        state.values.push_back(0.5);
+//        cout << "Density: " << tree.density_value(state, hmm._rho()) << endl;
+    }
+
+    cout << "True: " << tr << endl;
 
     // BRANCH
 

@@ -49,6 +49,8 @@ public:
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
     vector<vector<Sample> > forward(vector<Observation> *observations, size_t N);
 
+    double _rho();
+
 };
 
 #endif

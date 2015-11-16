@@ -11,7 +11,7 @@ DETree::DETree(){
     LOG(INFO) << "The DETree is not created, you should use create_tree explicitly to initialize the DETree";
 }
 
-DETree::DETree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
+DETree::DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
     create_tree(sample_set, sample_low, sample_high);
 }
 
@@ -148,7 +148,7 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
     max_diff_max_value = max_vals[max_diff_index];
     max_diff_min_value = min_vals[max_diff_index];
 
-    if (samples.size() <= 1){
+    if (samples.size() <= 1 || max_diff < min_diff_interval){
         leaf_node = true;
         return;
     }
@@ -168,7 +168,7 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
         }
     }
 
-    if (cut_index == samples.size() - 1){
+    if (cut_index == (int)samples.size() - 1){
         cut_index--;
     }
 
