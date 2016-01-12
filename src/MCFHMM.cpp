@@ -20,7 +20,7 @@ vector<vector<Sample> > MCFHMM::forward(vector<Observation> *observations, size_
     alpha_samples.push_back(sampler.resample_from(pi_tree, N));
 
     // STEP 2
-    for (size_t t = 1; t <= T; t++){
+    for (size_t t = 1; t < T; t++){
         // STEP 2(a)
         vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[t - 1], N);
         double sum_densities = 0.0;
@@ -236,6 +236,18 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
         }
     }
 
+}
+
+void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sample> *v, double rho){
+    this->pi = pi;
+    this->m = m;
+    this->v = v;
+
+    this->rho = rho;
+
+    pi_tree = new DETree(*pi, pi_low_limit, pi_high_limit);
+    m_tree = new DETree(*m, m_low_limit, m_high_limit);
+    v_tree = new DETree(*v, v_low_limit, v_high_limit);
 }
 
 void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,

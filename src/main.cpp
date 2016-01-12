@@ -33,8 +33,8 @@ int main(int argc, char* argv[])
 
     MCFHMM hmm;
 
-    int N = 200;
-    int max_iteration = 100;
+    int N = 400;
+    int max_iteration = 50;
 
     hmm.set_limits(&pi_low_limits, &pi_high_limits, &m_low_limits, &m_high_limits, &v_low_limits, &v_high_limits);
 
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        cout << "Observation " << i << endl;
+        cout << "Observation " << i << ":\t" << obs[i].values[0] << endl;
         cout << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
 
         if (i % 2 == 1){

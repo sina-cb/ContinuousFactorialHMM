@@ -46,6 +46,7 @@ public:
                     vector<double> *m_low_limit, vector<double> *m_high_limit,
                     vector<double> *v_low_limit, vector<double> *v_high_limit
                     );
+    void set_distributions(vector<Sample> * pi, vector<Sample> * m, vector<Sample> * v, double rho);
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
     vector<vector<Sample> > forward(vector<Observation> *observations, size_t N);
 

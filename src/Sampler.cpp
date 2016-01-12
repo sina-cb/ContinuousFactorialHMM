@@ -21,7 +21,7 @@ Sample Sampler::sample_given(DETree *tree, Sample &given){
     while(cond){
         int index = node->max_diff_index;
 
-        if (index <= (int)given.size()){
+        if (index < (int)given.size()){
             double max_value = node->max_diff_max_value;
             double min_value = node->max_diff_min_value;
 

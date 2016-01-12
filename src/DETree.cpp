@@ -105,7 +105,7 @@ DETreeNode::DETreeNode(){
 
 DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type){
 
-    // set the current nodes sample set
+    // set the current node's sample set
     for (size_t i = 0; i < sub_sample.size(); i++){
         samples.push_back(sub_sample[i]);
         node_sigma = node_sigma + sub_sample[i].p;

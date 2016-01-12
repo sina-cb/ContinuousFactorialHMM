@@ -60,6 +60,16 @@ set(SRC
 	src/Timer.cpp
 )
 
+set(SRC_FULLY
+	src/main_fully.cpp
+	src/Sampler.cpp
+	src/MCFHMM.cpp
+	src/DETree.cpp
+	src/Sample.cpp
+	src/Observation.cpp
+	src/Timer.cpp
+)
+
 set(HDRs
 	include/Sampler.h
 	include/MCFHMM.h
@@ -82,7 +92,16 @@ add_executable(${PROJECT_NAME} ${SRC} ${HDRs})
 
 target_link_libraries(${PROJECT_NAME} 
         ${GLOG_LIBRARY}
-	${LIBXML2_LIBRARIES}
+		${LIBXML2_LIBRARIES}
+        ${BOOST_LIBRARY}
+        ${THREADS_LIBRARY}
+)
+
+add_executable(${PROJECT_NAME}_fully ${SRC_FULLY} ${HDRs})
+
+target_link_libraries(${PROJECT_NAME}_fully
+        ${GLOG_LIBRARY}
+		${LIBXML2_LIBRARIES}
         ${BOOST_LIBRARY}
         ${THREADS_LIBRARY}
 )
