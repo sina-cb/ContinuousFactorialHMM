@@ -11,13 +11,13 @@ class Sampler{
 
 public:
 
-    Sample likelihood_weighted_sampler(vector<Sample> &sample_set);
-    vector<Sample> likelihood_weighted_resampler(vector<Sample> &sample_set, int size = -1);
-
-    vector<Sample> resample_from(DETree *tree, size_t sample_set_size);
+    Sample likelihood_weighted_sampler(vector<Sample> &sample_set); //Check
+    vector<Sample> likelihood_weighted_resampler(vector<Sample> &sample_set, int size = -1); //Check
     vector<Sample> uniform_sampling(vector<double> *sample_low, vector<double> *sample_high, size_t N);
-    Sample sample(DETree* tree);
+
+    Sample sample(DETree* tree); // Checked
     Sample sample_given(DETree* tree, Sample &given);
+    vector<Sample> resample_from(DETree *tree, size_t sample_set_size);
 
 private:
 

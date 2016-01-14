@@ -29,12 +29,12 @@ int main(int argc, char* argv[])
     init_GLOG(argc, argv);
 
     init_limits();
-    init_observations(100);
+    init_observations(20);
 
     MCFHMM hmm;
 
-    int N = 400;
-    int max_iteration = 50;
+    int N = 50;
+    int max_iteration = 10;
 
     hmm.set_limits(&pi_low_limits, &pi_high_limits, &m_low_limits, &m_high_limits, &v_low_limits, &v_high_limits);
 
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
     init_observations(10);
 
-    vector<vector<Sample> > forward = hmm.forward(&obs, 100);
+    vector<vector<Sample> > forward = hmm.forward(&obs, 4);
 
     int tr = 0;
     for (size_t i = 1; i < forward.size(); i++){

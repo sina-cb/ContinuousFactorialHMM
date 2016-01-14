@@ -29,6 +29,10 @@ vector<vector<Sample> > MCFHMM::forward(vector<Observation> *observations, size_
             // STEP 2(b)
             Sample x = sampler.sample_given(m_tree, temp[i]);
 
+            for (size_t i = 0; i < temp[i].size(); i++){
+                x.values.pop_back();
+            }
+
             // STEP 2(c)
             Sample v_temp = (*observations)[t].combine(x);
             double density = v_tree->density_value(v_temp, rho);
@@ -248,8 +252,6 @@ void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sam
     pi_tree = new DETree(*pi, pi_low_limit, pi_high_limit);
     m_tree = new DETree(*m, m_low_limit, m_high_limit);
     v_tree = new DETree(*v, v_low_limit, v_high_limit);
-
-    LOG(INFO) << v_tree->depth_first_str();
 }
 
 void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,

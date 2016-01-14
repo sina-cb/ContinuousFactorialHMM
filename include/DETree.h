@@ -52,8 +52,9 @@ public:
     vector<double> node_lower_bounds;
     vector<double> node_higher_bounds;
 
-    double node_longest_interval = 0;
+    double node_longest_interval = 0.0;
     int node_split_dimension = 0;
+    double node_mid_point = 0.0;
 
     DETreeNode *left_child;
     DETreeNode *right_child;

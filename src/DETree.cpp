@@ -17,37 +17,38 @@ DETree::DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<do
 
 double DETree::density_value(Sample sample, double rho){
 
-//    DETreeNode *node = this->get_root();
+    DETreeNode *node = this->get_root();
 
-//    bool cond = !node->leaf_node;
-//    while(cond){
-//        int index = node->max_diff_index;
+    bool cond = !node->leaf_node;
+    while(cond){
+        int dimension = node->node_split_dimension;
 
-//        cond = !node->leaf_node;
+        cond = !node->leaf_node;
 
-//        if (cond && sample.values[index] < node->cut_value){
-//            node = node->left_child;
-//        }else if (cond){
-//            node = node->right_child;
-//        }
-//    }
+        if (cond && sample.values[dimension] < node->node_mid_point){
+            node = node->left_child;
+        }else if (cond){
+            node = node->right_child;
+        }
+    }
 
-//    cond = !(node->node_type == 'R');
-//    double p = 0.0;
-//    double temp_rho = 1.0;
-//    while (cond){
-//        if (node->node_type != 'R'){
-//            p = p + (1 - rho) * temp_rho * node->node_sigma;
-//        } else {
-//            p = p + temp_rho * node->node_sigma;
-//        }
-//        temp_rho = temp_rho * rho;
+    cond = !(node->node_type == 'R');
+    double p = 0.0;
+    double temp_rho = 1.0;
+    while (cond){
+        if (node->node_type != 'R'){
+            p = p + (1 - rho) * temp_rho * node->node_f_hat;
+        } else {
+            p = p + temp_rho * node->node_f_hat;
+        }
+        temp_rho = temp_rho * rho;
 
-//        cond = !(node->node_type == 'R');
-//        node = node->parent;
-//    }
+        cond = !(node->node_type == 'R');
+        node = node->parent;
+    }
 
-//    return p;
+    return p;
+
 }
 
 void DETree::create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
@@ -156,13 +157,13 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type, vec
     vector<double> right_lower_intervals;
     vector<double> right_higher_intervals;
 
-    double mid_point = (node_longest_interval / 2.0) + node_lower_bounds[node_split_dimension];
+    node_mid_point = (node_longest_interval / 2.0) + node_lower_bounds[node_split_dimension];
 
     for (int i = 0; i < (int)node_lower_bounds.size(); i++){
         if (i == node_split_dimension){
             left_lower_intervals.push_back(node_lower_bounds[i]);
-            left_higher_intervals.push_back(mid_point);
-            right_lower_intervals.push_back(mid_point);
+            left_higher_intervals.push_back(node_mid_point);
+            right_lower_intervals.push_back(node_mid_point);
             right_higher_intervals.push_back(node_higher_bounds[i]);
         }else{
             left_lower_intervals.push_back(node_lower_bounds[i]);
@@ -182,7 +183,7 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type, vec
     // Split the samples into two sub sample sets
     int cut_index = 0;
     for (size_t i = 0; i < samples.size(); i++){
-        if (samples[i].values[node_split_dimension] < mid_point){
+        if (samples[i].values[node_split_dimension] < node_mid_point){
             cut_index = i;
         }
     }

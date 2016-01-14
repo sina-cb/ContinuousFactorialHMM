@@ -4,79 +4,6 @@
 #include <chrono>
 using namespace std;
 
-Sample Sampler::sample_given(DETree *tree, Sample &given){
-//    Sample sample;
-//    sample.init_rand(tree->tree_lower_bounds, tree->tree_upper_bounds);
-//    sample.p = 1.0;
-
-//    for (size_t i = given.size(); i < sample.size(); i++){
-//        sample.values[i] = given.values[i - given.size()];
-//    }
-
-//    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-//    std::default_random_engine gen(seed);
-//    DETreeNode *node = tree->get_root();
-
-//    bool cond = !node->leaf_node;
-//    while(cond){
-//        int index = node->max_diff_index;
-
-//        if (index < (int)given.size()){
-//            double max_value = node->max_diff_max_value;
-//            double min_value = node->max_diff_min_value;
-
-//            uniform_real_distribution<double> dist(min_value, max_value);
-//            double temp = dist(gen);
-//            sample.values[index] = temp;
-//        }
-
-//        cond = !node->leaf_node;
-//        if (sample.values[index] < node->cut_value){
-//            node = node->left_child;
-//        }else{
-//            node = node->right_child;
-//        }
-//    }
-
-//    Sample result;
-//    for (int i = 0; i < (int)given.size(); i++){
-//        result.values.push_back(sample.values[i]);
-//    }
-
-//    return result;
-}
-
-Sample Sampler::sample(DETree *tree){
-//    Sample sample;
-//    sample.init_rand(tree->tree_lower_bounds, tree->tree_upper_bounds);
-//    sample.p = 1.0;
-
-//    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-//    std::default_random_engine gen(seed);
-//    DETreeNode *node = tree->get_root();
-
-//    bool cond = !node->leaf_node;
-//    while(cond){
-//        int index = node->max_diff_index;
-//        double max_value = node->max_diff_max_value;
-//        double min_value = node->max_diff_min_value;
-
-//        uniform_real_distribution<double> dist(min_value, max_value);
-//        double temp = dist(gen);
-//        sample.values[index] = temp;
-
-//        cond = !node->leaf_node;
-
-//        if (sample.values[index] < node->cut_value){
-//            node = node->left_child;
-//        }else{
-//            node = node->right_child;
-//        }
-//    }
-
-//    return sample;
-}
-
 Sample Sampler::likelihood_weighted_sampler(vector<Sample> &sample_set){
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine gen(seed);
@@ -157,6 +84,120 @@ vector<Sample> Sampler::likelihood_weighted_resampler(vector<Sample> &sample_set
     }
 
     return temp;
+}
+
+Sample Sampler::sample(DETree *tree){
+    Sample sample;
+    sample.init_rand(&tree->get_root()->node_lower_bounds, &tree->get_root()->node_higher_bounds);
+    sample.p = 1.0;
+
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine gen(seed);
+    DETreeNode *node = tree->get_root();
+
+    bool cond = !node->leaf_node;
+    while(cond){
+        int dimension = node->node_split_dimension;
+        double min_value = node->node_lower_bounds[dimension];
+        double max_value = node->node_higher_bounds[dimension];
+
+        if (node->leaf_node){
+            uniform_real_distribution<double> dist(min_value, max_value);
+            double temp = dist(gen);
+            sample.values[dimension] = temp;
+
+            cond = !node->leaf_node;
+        }else{
+            uniform_real_distribution<double> child_decision_gen(0, node->left_child->node_sigma + node->right_child->node_sigma);
+            double decision = child_decision_gen(gen);
+
+            if (decision < node->left_child->node_sigma){
+                min_value = node->left_child->node_lower_bounds[dimension];
+                max_value = node->left_child->node_higher_bounds[dimension];
+            }else{
+                min_value = node->right_child->node_lower_bounds[dimension];
+                max_value = node->right_child->node_higher_bounds[dimension];
+            }
+
+            uniform_real_distribution<double> dist(min_value, max_value);
+            double temp = dist(gen);
+            sample.values[dimension] = temp;
+
+            cond = !node->leaf_node;
+
+            if (sample.values[dimension] < node->node_mid_point){
+                node = node->left_child;
+            }else{
+                node = node->right_child;
+            }
+        }
+    }
+
+    return sample;
+}
+
+Sample Sampler::sample_given(DETree *tree, Sample &given){
+    Sample sample;
+    sample.init_rand(&tree->get_root()->node_lower_bounds, &tree->get_root()->node_higher_bounds);
+    sample.p = 1.0;
+
+    int offset = sample.size() - given.size();
+    for (size_t i = offset; i < sample.size(); i++){
+        sample.values[i] = given.values[i - offset];
+    }
+
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine gen(seed);
+    DETreeNode *node = tree->get_root();
+
+    bool cond = !node->leaf_node;
+    while(cond){
+        int dimension = node->node_split_dimension;
+        double min_value = node->node_lower_bounds[dimension];
+        double max_value = node->node_higher_bounds[dimension];
+
+        // If we need to actually generate values
+        if (dimension < offset){
+            if (node->leaf_node){
+                uniform_real_distribution<double> dist(min_value, max_value);
+                double temp = dist(gen);
+                sample.values[dimension] = temp;
+
+                cond = !node->leaf_node;
+            }else{
+                uniform_real_distribution<double> child_decision_gen(0, node->left_child->node_f_hat + node->right_child->node_f_hat);
+                double decision = child_decision_gen(gen);  // This can be moved out of the while loop to make the process faster!
+
+                if (decision < node->left_child->node_f_hat){
+                    min_value = node->left_child->node_lower_bounds[dimension];
+                    max_value = node->left_child->node_higher_bounds[dimension];
+                }else{
+                    min_value = node->right_child->node_lower_bounds[dimension];
+                    max_value = node->right_child->node_higher_bounds[dimension];
+                }
+
+                uniform_real_distribution<double> dist(min_value, max_value);
+                double temp = dist(gen);
+                sample.values[dimension] = temp;
+
+                cond = !node->leaf_node;
+
+                if (sample.values[dimension] < node->node_mid_point){
+                    node = node->left_child;
+                }else{
+                    node = node->right_child;
+                }
+            }
+        }else{ // If we have the values given
+            if (!node->leaf_node && sample.values[dimension] < node->node_mid_point){
+                node = node->left_child;
+            }else if (!node->leaf_node){
+                node = node->right_child;
+            }
+        }
+    }
+
+    return sample;
 }
 
 vector<Sample> Sampler::resample_from(DETree *tree, size_t sample_set_size){
