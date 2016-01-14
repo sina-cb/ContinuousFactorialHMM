@@ -5,76 +5,76 @@
 using namespace std;
 
 Sample Sampler::sample_given(DETree *tree, Sample &given){
-    Sample sample;
-    sample.init_rand(tree->samples_low_limit, tree->samples_high_limit);
-    sample.p = 1.0;
+//    Sample sample;
+//    sample.init_rand(tree->tree_lower_bounds, tree->tree_upper_bounds);
+//    sample.p = 1.0;
 
-    for (size_t i = given.size(); i < sample.size(); i++){
-        sample.values[i] = given.values[i - given.size()];
-    }
+//    for (size_t i = given.size(); i < sample.size(); i++){
+//        sample.values[i] = given.values[i - given.size()];
+//    }
 
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine gen(seed);
-    DETreeNode *node = tree->get_root();
+//    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+//    std::default_random_engine gen(seed);
+//    DETreeNode *node = tree->get_root();
 
-    bool cond = !node->leaf_node;
-    while(cond){
-        int index = node->max_diff_index;
+//    bool cond = !node->leaf_node;
+//    while(cond){
+//        int index = node->max_diff_index;
 
-        if (index < (int)given.size()){
-            double max_value = node->max_diff_max_value;
-            double min_value = node->max_diff_min_value;
+//        if (index < (int)given.size()){
+//            double max_value = node->max_diff_max_value;
+//            double min_value = node->max_diff_min_value;
 
-            uniform_real_distribution<double> dist(min_value, max_value);
-            double temp = dist(gen);
-            sample.values[index] = temp;
-        }
+//            uniform_real_distribution<double> dist(min_value, max_value);
+//            double temp = dist(gen);
+//            sample.values[index] = temp;
+//        }
 
-        cond = !node->leaf_node;
-        if (sample.values[index] < node->cut_value){
-            node = node->left_child;
-        }else{
-            node = node->right_child;
-        }
-    }
+//        cond = !node->leaf_node;
+//        if (sample.values[index] < node->cut_value){
+//            node = node->left_child;
+//        }else{
+//            node = node->right_child;
+//        }
+//    }
 
-    Sample result;
-    for (int i = 0; i < (int)given.size(); i++){
-        result.values.push_back(sample.values[i]);
-    }
+//    Sample result;
+//    for (int i = 0; i < (int)given.size(); i++){
+//        result.values.push_back(sample.values[i]);
+//    }
 
-    return result;
+//    return result;
 }
 
 Sample Sampler::sample(DETree *tree){
-    Sample sample;
-    sample.init_rand(tree->samples_low_limit, tree->samples_high_limit);
-    sample.p = 1.0;
+//    Sample sample;
+//    sample.init_rand(tree->tree_lower_bounds, tree->tree_upper_bounds);
+//    sample.p = 1.0;
 
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine gen(seed);
-    DETreeNode *node = tree->get_root();
+//    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+//    std::default_random_engine gen(seed);
+//    DETreeNode *node = tree->get_root();
 
-    bool cond = !node->leaf_node;
-    while(cond){
-        int index = node->max_diff_index;
-        double max_value = node->max_diff_max_value;
-        double min_value = node->max_diff_min_value;
+//    bool cond = !node->leaf_node;
+//    while(cond){
+//        int index = node->max_diff_index;
+//        double max_value = node->max_diff_max_value;
+//        double min_value = node->max_diff_min_value;
 
-        uniform_real_distribution<double> dist(min_value, max_value);
-        double temp = dist(gen);
-        sample.values[index] = temp;
+//        uniform_real_distribution<double> dist(min_value, max_value);
+//        double temp = dist(gen);
+//        sample.values[index] = temp;
 
-        cond = !node->leaf_node;
+//        cond = !node->leaf_node;
 
-        if (sample.values[index] < node->cut_value){
-            node = node->left_child;
-        }else{
-            node = node->right_child;
-        }
-    }
+//        if (sample.values[index] < node->cut_value){
+//            node = node->left_child;
+//        }else{
+//            node = node->right_child;
+//        }
+//    }
 
-    return sample;
+//    return sample;
 }
 
 Sample Sampler::likelihood_weighted_sampler(vector<Sample> &sample_set){

@@ -15,16 +15,13 @@ public:
     DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
 
     void create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
+    DETree create_conditional_tree(Sample given);
     double density_value(Sample sample, double rho);
 
     DETreeNode* get_root();
 
     vector<DETreeNode*>* depth_first();
     string depth_first_str();
-
-    vector<double> *samples_low_limit;
-    vector<double> *samples_high_limit;
-
 
 private:
     DETreeNode *root;
@@ -36,9 +33,11 @@ class DETreeNode{
 
 public:
     DETreeNode();
-    DETreeNode(vector<Sample>sub_sample, int level, char node_type);
+    DETreeNode(vector<Sample>sub_sample, int level, char node_type, vector<double> low_bounds, vector<double> high_bounds);
 
     string str();
+
+    const double min_diff_interval = 0.05;
 
     vector<Sample> samples;
 
@@ -47,16 +46,14 @@ public:
     int node_size = 0;
     char node_type = 'R';
     double node_sigma = 0.0;
+    double node_f_hat = 0.0;
+    double node_v_size = 1.0;
 
-    double max_diff_max_value;
-    double max_diff_min_value;
+    vector<double> node_lower_bounds;
+    vector<double> node_higher_bounds;
 
-    double cut_value;
-    int cut_index;
-    int max_diff_index;
-    double max_diff;
-
-    double min_diff_interval = 0.05;
+    double node_longest_interval = 0;
+    int node_split_dimension = 0;
 
     DETreeNode *left_child;
     DETreeNode *right_child;

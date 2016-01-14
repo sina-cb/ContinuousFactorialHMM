@@ -51,7 +51,6 @@ public:
     vector<vector<Sample> > forward(vector<Observation> *observations, size_t N);
 
     double _rho();
-
 };
 
 #endif
