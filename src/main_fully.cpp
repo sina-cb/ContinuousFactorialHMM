@@ -13,6 +13,17 @@
 using namespace std;
 using namespace google;
 
+#define N 200
+#define N_HMM_TEST 200
+#define MAX_ITERATION 30
+#define INIT_OBS_C 200
+#define TEST_OBS_C 10000
+#define PI_SAMPLE_C 20
+#define M_SAMPLE_C 1000
+#define V_SAMPLE_C 1000
+
+#define USE_EM 1
+
 void init_pi(vector<Sample> * pi, int sample_count);
 void init_m(vector<Sample> * m, int sample_count);
 void init_v(vector<Sample> * v, int sample_count);
@@ -22,15 +33,129 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
 void init_observations(vector<Observation> * obs, size_t size);
 
 void init_GLOG(int argc, char* argv[]);
+vector<Sample> fixed_sample_set();
 void print(vector<Sample> dist);
 
+void use_precollected_samples();
+void use_em_learning();
 void run_small_tree_creation();
-vector<Sample> fixed_sample_set();
 
 int main(int argc, char* argv[])
 {
     init_GLOG(argc, argv);
 
+#if USE_EM
+    use_em_learning();
+#else
+    use_precollected_samples();
+#endif
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// Initialization Part ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+void use_em_learning(){
+
+    // Initializing the limits for the values that each variable can take
+    vector<double> * pi_low_limits = new vector<double>();
+    vector<double> * pi_high_limits = new vector<double>();
+    vector<double> * m_low_limits = new vector<double>();
+    vector<double> * m_high_limits = new vector<double>();
+    vector<double> * v_low_limits = new vector<double>();
+    vector<double> * v_high_limits = new vector<double>();
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
+
+        init_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
+
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Initializing the limits time: " << (t2 - t1) << " seconds";
+    }
+
+    vector<Observation> *observations = new vector<Observation>();
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
+
+        init_observations(observations, INIT_OBS_C);
+
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Initializing the observations time: " << (t2 - t1) << " seconds";
+    }
+
+    // Generating the HMM from the gathered samples and the known limits
+    MCFHMM hmm;
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
+
+        hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
+        hmm.learn_hmm(observations, MAX_ITERATION, N);
+
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Generating the MCFHMM time: " << (t2 - t1) << " seconds";
+    }
+
+    // Testing the accuracy
+    size_t turn = 0;
+    observations = new vector<Observation>;
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
+
+        init_observations(observations, TEST_OBS_C);
+        vector<vector<Sample> > forward = hmm.forward(observations, N_HMM_TEST);
+
+        int tr = 0;
+        for (size_t i = 0; i < forward.size(); i++){
+            double state0 = 0.0;
+            double state1 = 0.0;
+            for (size_t j = 0; j < forward[i].size(); j++){
+                //LOG(INFO) << "Forward: " << i << " " << j << " " << forward[i][j].values[0];
+                if (forward[i][j].values[0] <= 1.5){
+                    state0 += forward[i][j].p;
+                }else{
+                    state1 += forward[i][j].p;
+                }
+            }
+
+            cout << "Observation " << i << ":\t" << (*observations)[i].values[0] << endl;
+            cout << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
+
+            if (i == 0){
+                if (state0 < state1){
+                    turn = 0;
+                }
+                if (state1 < state0){
+                    turn = 1;
+                }
+                tr++;
+            }
+
+            if (i % 2 == turn){
+                if (state0 < state1){
+                    tr++;
+                }
+            }else{
+                if (state1 < state0){
+                    tr++;
+                }
+            }
+        }
+
+        LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
+
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Testing the MCFHMM time: " << (t2 - t1) << " seconds";
+    }
+
+}
+
+void use_precollected_samples(){
     // Gathering samples from the distributions
     vector<Sample> *pi = new vector<Sample>();
     vector<Sample> *m = new vector<Sample>();
@@ -39,9 +164,9 @@ int main(int argc, char* argv[])
         Timer tmr;
         double t1 = tmr.elapsed();
 
-        init_pi(pi, 20);
-        init_m(m, 1000);
-        init_v(v, 1000);
+        init_pi(pi, PI_SAMPLE_C);
+        init_m(m, M_SAMPLE_C);
+        init_v(v, V_SAMPLE_C);
 
         LOG(INFO) << "PI size: " << pi->size();
         LOG(INFO) << "M size: " << m->size();
@@ -87,8 +212,8 @@ int main(int argc, char* argv[])
         Timer tmr;
         double t1 = tmr.elapsed();
 
-        init_observations(obs, 10000);
-        vector<vector<Sample> > forward = hmm.forward(obs, 100);
+        init_observations(obs, TEST_OBS_C);
+        vector<vector<Sample> > forward = hmm.forward(obs, N_HMM_TEST);
 
         int tr = 0;
         for (size_t i = 0; i < forward.size(); i++){
@@ -117,18 +242,12 @@ int main(int argc, char* argv[])
             }
         }
 
-        LOG(INFO) << "True: " << tr << endl;
+        LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Testing the MCFHMM time: " << (t2 - t1) << " seconds";
     }
-
-    return 0;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////// Initialization Part ///////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////
 
 void init_pi(vector<Sample> *pi, int sample_count){
     if (!pi){

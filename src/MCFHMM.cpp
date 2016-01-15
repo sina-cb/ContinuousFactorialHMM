@@ -88,6 +88,10 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                     // STEP 2(b)
                     Sample x = sampler.sample_given(m_tree, temp[i]);
 
+                    for (size_t i = 0; i < temp[i].size(); i++){
+                        x.values.pop_back();
+                    }
+
                     // STEP 2(c)
                     Sample v_temp = (*observations)[t].combine(x);
                     double density = v_tree->density_value(v_temp, rho);
@@ -121,6 +125,10 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 for (size_t i = 0; i < temp.size(); i++){
                     // STEP 4(b)
                     Sample x = sampler.sample_given(m_tree, temp[i]);
+
+                    for (size_t i = 0; i < temp[i].size(); i++){
+                        x.values.pop_back();
+                    }
 
                     // STEP 4(c)
                     Sample v_temp = (*observations)[t].combine(x);
@@ -173,6 +181,8 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 gamma_samples.push_back(temp);
                 gamma_trees.push_back(DETree(temp, pi_low_limit, pi_high_limit));
             }
+
+            LOG(INFO) << "End of E Step at iteration: " << iteration;
         }
 
         /////////////////M STEP/////////////////
@@ -214,6 +224,10 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 temp_pi.push_back(gamma_samples[0][i]);
             }
 
+            gamma_samples.clear();
+            beta_samples.clear();
+            alpha_samples.clear();
+
             pi = &temp_pi;
             pi_tree->create_tree(*pi, pi_low_limit, pi_high_limit);
 
@@ -222,6 +236,8 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
             v = &temp_v;
             v_tree->create_tree(*v, v_low_limit, v_high_limit);
+
+            LOG(INFO) << "End of M Step at iteration: " << iteration;
         }
 
         /////////////////ANNEALING/////////////////
@@ -239,7 +255,6 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             cond = false;
         }
     }
-
 }
 
 void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sample> *v, double rho){
