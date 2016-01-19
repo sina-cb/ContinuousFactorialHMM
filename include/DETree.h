@@ -13,6 +13,7 @@ class DETree{
 public:
     DETree();
     DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
+    ~DETree();
 
     void create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
     DETree create_conditional_tree(Sample given);
@@ -34,6 +35,7 @@ class DETreeNode{
 public:
     DETreeNode();
     DETreeNode(vector<Sample>sub_sample, int level, char node_type, vector<double> low_bounds, vector<double> high_bounds);
+    ~DETreeNode();
 
     string str();
 

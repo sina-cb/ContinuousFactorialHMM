@@ -13,11 +13,11 @@
 using namespace std;
 using namespace google;
 
-#define N 200
-#define N_HMM_TEST 200
-#define MAX_ITERATION 30
+#define N 100
+#define N_HMM_TEST 100
+#define MAX_ITERATION 50
 #define INIT_OBS_C 200
-#define TEST_OBS_C 10000
+#define TEST_OBS_C 100
 #define PI_SAMPLE_C 20
 #define M_SAMPLE_C 1000
 #define V_SAMPLE_C 1000
@@ -114,17 +114,29 @@ void use_em_learning(){
         for (size_t i = 0; i < forward.size(); i++){
             double state0 = 0.0;
             double state1 = 0.0;
-            for (size_t j = 0; j < forward[i].size(); j++){
-                //LOG(INFO) << "Forward: " << i << " " << j << " " << forward[i][j].values[0];
-                if (forward[i][j].values[0] <= 1.5){
-                    state0 += forward[i][j].p;
-                }else{
-                    state1 += forward[i][j].p;
-                }
-            }
 
-            cout << "Observation " << i << ":\t" << (*observations)[i].values[0] << endl;
-            cout << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
+            //LOG(INFO) << "Forward " << i << " Size: " << forward[i].size();
+//            for (size_t j = 0; j < forward[i].size(); j++){
+//                //LOG(INFO) << "Forward: " << i << " " << j << " " << forward[i][j].values[0];
+//                if (forward[i][j].values[0] <= 1.5){
+//                    state0 += forward[i][j].p;
+//                }else{
+//                    state1 += forward[i][j].p;
+//                }
+//            }
+
+            DETree forward_tree(forward[i], pi_low_limits, pi_high_limits);
+
+            Sample state0_sample;
+            state0_sample.values.push_back(1);
+            state0 = forward_tree.density_value(state0_sample, hmm._rho());
+
+            Sample state1_sample;
+            state1_sample.values.push_back(2);
+            state1 = forward_tree.density_value(state1_sample, hmm._rho());
+
+            LOG(INFO) << "Observation " << i << ":\t" << (*observations)[i].values[0];
+            LOG(INFO) << "State 0: " << state0 << " State 1: " << state1;
 
             if (i == 0){
                 if (state0 < state1){
@@ -133,16 +145,21 @@ void use_em_learning(){
                 if (state1 < state0){
                     turn = 1;
                 }
-                tr++;
             }
 
             if (i % 2 == turn){
                 if (state0 < state1){
                     tr++;
+                    LOG(INFO) << "CORRECT GUESS!" << endl << endl;
+                }else{
+                    LOG(INFO) << "WRONG GUESS!" << endl << endl;
                 }
             }else{
                 if (state1 < state0){
                     tr++;
+                    LOG(INFO) << "CORRECT GUESS!" << endl << endl;
+                }else{
+                    LOG(INFO) << "WRONG GUESS!" << endl << endl;
                 }
             }
         }
@@ -228,8 +245,8 @@ void use_precollected_samples(){
                 }
             }
 
-            cout << "Observation " << i << ":\t" << (*obs)[i].values[0] << endl;
-            cout << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
+            LOG(INFO) << "Observation " << i << ":\t" << (*obs)[i].values[0] << endl;
+            LOG(INFO) << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
 
             if (i % 2 == 1){
                 if (state0 < state1){

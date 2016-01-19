@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <glog/logging.h>
 using namespace std;
 
 #ifndef SAMPLE_H
@@ -10,6 +11,8 @@ using namespace std;
 class Sample{
 
 public:
+    ~Sample();
+
     vector<double> values;
     double p;
 

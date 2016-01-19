@@ -15,6 +15,15 @@ DETree::DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<do
     create_tree(sample_set, sample_low, sample_high);
 }
 
+DETree::~DETree(){
+    vector<DETreeNode*>* nodes = depth_first();
+    for (size_t i = 0; i < nodes->size(); i++){
+        delete (*nodes)[i];
+    }
+
+//    LOG(INFO) << "DETREE DECONSTRUCTOR!";
+}
+
 double DETree::density_value(Sample sample, double rho){
 
     DETreeNode *node = this->get_root();
@@ -128,6 +137,9 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type, vec
     node_lower_bounds = low_bounds;
     node_higher_bounds = high_bounds;
 
+    low_bounds.clear();
+    high_bounds.clear();
+
     // Compute the node's region size
     for (size_t i = 0; i < node_lower_bounds.size(); i++){
         node_v_size *= (node_higher_bounds[i] - node_lower_bounds[i]);
@@ -206,6 +218,14 @@ DETreeNode::DETreeNode(vector<Sample> sub_sample, int level, char node_type, vec
 
     this->left_child->parent = this;
     this->right_child->parent = this;
+}
+
+DETreeNode::~DETreeNode(){
+    samples.clear();
+    node_lower_bounds.clear();
+    node_higher_bounds.clear();
+
+//    LOG(INFO) << "DETREENODE DECONSTRUCTOR!!!";
 }
 
 string DETreeNode::str(){

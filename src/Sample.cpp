@@ -2,6 +2,11 @@
 #include <random>
 #include <chrono>
 
+Sample::~Sample(){
+    values.clear();
+//    LOG(INFO) << "SAMPLE CLASS DESTRUCTOR!";
+}
+
 size_t Sample::size(){
     return values.size();
 }

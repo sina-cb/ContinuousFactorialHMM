@@ -64,24 +64,23 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
     size_t iteration = 0;
 
     while (cond){
-        vector<vector<Sample> > alpha_samples;
-        vector<vector<Sample> > beta_samples;
-        vector<vector<Sample> > gamma_samples;
+        vector<Sample> alpha_samples[2];
+        vector<Sample> beta_samples[2];
 
-        vector<DETree> alpha_trees;
-        vector<DETree> beta_trees;
-        vector<DETree> gamma_trees;
+        vector<DETree*> alpha_trees;
+        vector<DETree*> beta_trees;
+        vector<DETree*> gamma_trees;
 
         /////////////////E STEP/////////////////
         {
             // STEP 1
-            alpha_samples.push_back(sampler.resample_from(pi_tree, N));
-            alpha_trees.push_back(DETree(alpha_samples[0], pi_low_limit, pi_high_limit));
+            alpha_samples[0] = sampler.resample_from(pi_tree, N);
+            alpha_trees.push_back(new DETree(alpha_samples[0], pi_low_limit, pi_high_limit));
 
             // STEP 2
             for (size_t t = 1; t <= T; t++){
                 // STEP 2(a)
-                vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[t - 1], N);
+                vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[(t - 1) % 2], N);
                 double sum_densities = 0.0;
 
                 for (size_t i = 0; i < temp.size(); i++){
@@ -107,18 +106,18 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 }
 
                 // STEP 2(d)
-                alpha_samples.push_back(temp);
-                alpha_trees.push_back(DETree(temp, pi_low_limit, pi_high_limit));
+                alpha_samples[t % 2] = temp;
+                alpha_trees.push_back(new DETree(temp, pi_low_limit, pi_high_limit));
             }
 
             // STEP 3
-            beta_samples.push_back(sampler.uniform_sampling(pi_low_limit, pi_high_limit, N));
-            beta_trees.push_back(DETree(beta_samples[0], pi_low_limit, pi_high_limit));
+            beta_samples[0] = sampler.uniform_sampling(pi_low_limit, pi_high_limit, N);
+            beta_trees.push_back(new DETree(beta_samples[0], pi_low_limit, pi_high_limit));
 
             // STEP 4
             for (size_t t = T; t >= 1; t--){
                 // STEP 4(a)
-                int index_t = (T + 1) - (t + 1);
+                int index_t = ((T + 1) - (t + 1)) % 2;
                 vector<Sample> temp = sampler.likelihood_weighted_resampler(beta_samples[index_t], N);
                 double sum_densities = 0.0;
 
@@ -145,8 +144,8 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 }
 
                 // STEP 4(d)
-                beta_samples.push_back(temp);
-                beta_trees.push_back(DETree(temp, pi_low_limit, pi_high_limit));
+                beta_samples[(index_t + 1) % 2] = temp;
+                beta_trees.push_back(new DETree(temp, pi_low_limit, pi_high_limit));
             }
 
             // STEP 5
@@ -158,17 +157,16 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
                 // STEP 5(a)
                 for (int j = 0; j < N / 2; j++){
-                    Sample sample = sampler.likelihood_weighted_sampler(alpha_samples[t]);
-                    sample.p = beta_trees[index_t].density_value(sample, rho);
+                    Sample sample = sampler.sample(alpha_trees[t]);
+                    sample.p = (*beta_trees[index_t]).density_value(sample, rho);
                     sum_density += sample.p;
-                    vector<vector<Sample> > alpha_samples;
                     temp.push_back(sample);
                 }
 
                 // STEP 5(b)
                 for (int j = 0; j < N - (N / 2); j++){
-                    Sample sample = sampler.likelihood_weighted_sampler(beta_samples[index_t]);
-                    sample.p = alpha_trees[t].density_value(sample, rho);
+                    Sample sample = sampler.sample(beta_trees[index_t]);
+                    sample.p = (*alpha_trees[t]).density_value(sample, rho);
                     sum_density += sample.p;
                     temp.push_back(sample);
                 }
@@ -178,9 +176,13 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                     temp[i].p = temp[i].p / sum_density;
                 }
 
-                gamma_samples.push_back(temp);
-                gamma_trees.push_back(DETree(temp, pi_low_limit, pi_high_limit));
+                gamma_trees.push_back(new DETree(temp, pi_low_limit, pi_high_limit));
             }
+
+            alpha_samples[0].clear();
+            alpha_samples[1].clear();
+            beta_samples[0].clear();
+            beta_samples[1].clear();
 
             LOG(INFO) << "End of E Step at iteration: " << iteration;
         }
@@ -199,8 +201,8 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 uniform_real_distribution<double> dist(1, T - 1);
                 int t = dist(gen);
 
-                Sample x = sampler.likelihood_weighted_sampler(gamma_samples[t]);
-                Sample x_prime = sampler.likelihood_weighted_sampler(gamma_samples[t + 1]);
+                Sample x = sampler.sample(gamma_trees[t]);
+                Sample x_prime = sampler.sample(gamma_trees[t + 1]);
 
                 Sample temp = x.combine(x_prime.values);
                 temp.p = 1.0 / N;
@@ -212,7 +214,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 uniform_real_distribution<double> dist(1, T);
                 int t = dist(gen);
 
-                Sample x = sampler.likelihood_weighted_sampler(gamma_samples[t]);
+                Sample x = sampler.sample(gamma_trees[t]);
 
                 Sample temp = (*observations)[t].combine(x);
                 temp.p = 1.0 / N;
@@ -220,13 +222,10 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             }
 
             // STEP 3
-            for (size_t i = 0; i < gamma_samples[0].size(); i++){
-                temp_pi.push_back(gamma_samples[0][i]);
+            int pi_size = pi->size();
+            for (int i = 0; i < pi_size; i++){
+                temp_pi.push_back(sampler.sample(gamma_trees[0]));
             }
-
-            gamma_samples.clear();
-            beta_samples.clear();
-            alpha_samples.clear();
 
             pi = &temp_pi;
             pi_tree->create_tree(*pi, pi_low_limit, pi_high_limit);
@@ -237,6 +236,10 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             v = &temp_v;
             v_tree->create_tree(*v, v_low_limit, v_high_limit);
 
+            temp_pi.clear();
+            temp_m.clear();
+            temp_v.clear();
+
             LOG(INFO) << "End of M Step at iteration: " << iteration;
         }
 
@@ -246,13 +249,26 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
         /////////////////SAMPLE SET SIZE/////////////////
         if (N < (int)max_sample_size)
-            N = N * eta;
+            N = N; // * eta;
 
         /////////////////STOP CONDITION/////////////////
-        LOG(INFO) << "Iteration " << iteration + 1 << " Finished!";
+        LOG(INFO) << "Iteration " << iteration + 1 << " Finished!" << "\n";
         iteration++;
         if (iteration >= max_iteration){
             cond = false;
+        }
+
+        for (size_t i = 0; i < alpha_trees.size(); i++){
+//            LOG(INFO) << (*alpha_trees[i]).get_root()->samples.size();
+            delete alpha_trees[i];
+        }
+
+        for (size_t i = 0; i < beta_trees.size(); i++){
+            delete beta_trees[i];
+        }
+
+        for (size_t i = 0; i < gamma_trees.size(); i++){
+            delete gamma_trees[i];
         }
     }
 }
