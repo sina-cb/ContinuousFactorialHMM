@@ -49,41 +49,41 @@ int main(int argc, char* argv[])
 
     init_observations(10);
 
-    vector<vector<Sample> > forward = hmm.forward(&obs, 4);
+//     vector<vector<Sample> > forward = hmm.forward(&obs, 4);
 
-    int tr = 0;
-    for (size_t i = 1; i < forward.size(); i++){
-        double state0 = 0.0;
-        double state1 = 0.0;
-        for (size_t j = 0; j < forward[i].size(); j++){
-            if (forward[i][j].values[0] > 0.5){
-                state1 += forward[i][j].p;
-            }else{
-                state0 += forward[i][j].p;
-            }
-        }
+//     int tr = 0;
+//     for (size_t i = 1; i < forward.size(); i++){
+//         double state0 = 0.0;
+//         double state1 = 0.0;
+//         for (size_t j = 0; j < forward[i].size(); j++){
+//             if (forward[i][j].values[0] > 0.5){
+//                 state1 += forward[i][j].p;
+//             }else{
+//                 state0 += forward[i][j].p;
+//             }
+//         }
 
-        cout << "Observation " << i << ":\t" << obs[i].values[0] << endl;
-        cout << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
+//         cout << "Observation " << i << ":\t" << obs[i].values[0] << endl;
+//         cout << "State 0: " << state0 << " State 1: " << state1 << endl << endl;
 
-        if (i % 2 == 1){
-            if (state0 > state1){
-               tr++;
-            }
-        }else{
-            if (state1 > state0){
-               tr++;
-            }
-        }
+//         if (i % 2 == 1){
+//             if (state0 > state1){
+//                tr++;
+//             }
+//         }else{
+//             if (state1 > state0){
+//                tr++;
+//             }
+//         }
 
-//        vector<Sample> temp = forward[i];
-//        DETree tree(temp, &pi_low_limits, &pi_high_limits);
-//        Sample state;
-//        state.values.push_back(0.5);
-//        cout << "Density: " << tree.density_value(state, hmm._rho()) << endl;
-    }
+// //        vector<Sample> temp = forward[i];
+// //        DETree tree(temp, &pi_low_limits, &pi_high_limits);
+// //        Sample state;
+// //        state.values.push_back(0.5);
+// //        cout << "Density: " << tree.density_value(state, hmm._rho()) << endl;
+//     }
 
-    cout << "True: " << tr << endl;
+//     cout << "True: " << tr << endl;
 
     // BRANCH
 

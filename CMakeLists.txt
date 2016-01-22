@@ -16,10 +16,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
 
 # Find LibXml2 library
-find_package(LibXml2 2.6.0 REQUIRED)
+# find_package(LibXml2 2.6.0 REQUIRED)
 
 # Find Armadillo library
-find_package(Armadillo REQUIRED)
+# find_package(Armadillo REQUIRED)
 
 # The Google Glog_Pack library.
 # Store the glog include directory in GLOG_INCLUDE_DIR.
