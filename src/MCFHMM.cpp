@@ -23,8 +23,7 @@ DETree MCFHMM::forward(vector<Observation> *observations, size_t N){
     size_t t = 1;
     for (t = 1; t < T; t++){
         // STEP 2(a)
-        DETree temp_tree(alpha_samples[(t - 1) % 2], pi_low_limit, pi_high_limit);
-        vector<Sample> temp = sampler.resample_from(&temp_tree, N);
+        vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[(t - 1) % 2], N);
         double sum_densities = 0.0;
 
         for (size_t i = 0; i < temp.size(); i++){
