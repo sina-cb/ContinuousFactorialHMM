@@ -20,7 +20,7 @@ DETree MCFHMM::forward(vector<Observation> *observations, size_t N){
     alpha_samples[0] = sampler.resample_from(pi_tree, N);
 
     // STEP 2
-    size_t t = 1;
+    size_t t = 0;
     for (t = 1; t < T; t++){
         // STEP 2(a)
         vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[(t - 1) % 2], N);
@@ -52,7 +52,7 @@ DETree MCFHMM::forward(vector<Observation> *observations, size_t N){
         alpha_samples[t % 2] = temp;
     }
 
-    return DETree(alpha_samples[t % 2], pi_low_limit, pi_high_limit);
+    return DETree(alpha_samples[(t - 1) % 2], pi_low_limit, pi_high_limit);
 }
 
 void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){
@@ -61,7 +61,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
         LOG(ERROR) << "Not enough observation data!";
         return;
     }
-    
+
     Sampler sampler;
     size_t T = observations->size();
 
