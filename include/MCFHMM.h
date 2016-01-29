@@ -31,6 +31,8 @@ private:
     vector<double> *v_low_limit = NULL;
     vector<double> *v_high_limit = NULL;
 
+    bool initialized = false;
+
     double rho = 1.0;
     double rho_bar = 0.5;
     double eta = 1.2;
@@ -50,7 +52,10 @@ public:
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
     DETree forward(vector<Observation> *observations, size_t N);
 
+    void init_GLOG();
+
     double _rho();
+    bool initialized_();
 };
 
 #endif

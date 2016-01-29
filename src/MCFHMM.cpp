@@ -5,6 +5,7 @@
 #include <chrono>
 #include <glog/logging.h>
 using namespace std;
+using namespace google;
 
 MCFHMM::MCFHMM(){
     pi = new vector<Sample>();
@@ -277,6 +278,8 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             delete gamma_trees[i];
         }
     }
+
+    initialized = true;
 }
 
 void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sample> *v, double rho){
@@ -289,6 +292,8 @@ void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sam
     pi_tree = new DETree(*pi, pi_low_limit, pi_high_limit);
     m_tree = new DETree(*m, m_low_limit, m_high_limit);
     v_tree = new DETree(*v, v_low_limit, v_high_limit);
+
+    initialized = true;
 }
 
 void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
@@ -337,8 +342,22 @@ void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v){
     m_tree = new DETree(*m, m_low_limit, m_high_limit);
     v_tree = new DETree(*v, v_low_limit, v_high_limit);
 
+    initialized = true;
 }
 
 double MCFHMM::_rho(){
     return this->rho;
+}
+
+bool MCFHMM::initialized_(){
+    return initialized;
+}
+
+void MCFHMM::init_GLOG(){
+    InitGoogleLogging("HMM");
+    FLAGS_stderrthreshold = 0;
+    FLAGS_log_dir = ".";
+    FLAGS_minloglevel = 0;
+    //FLAGS_logtostderr = true;
+    //SetLogDestination(google::INFO, "./info");
 }
