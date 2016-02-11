@@ -86,7 +86,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             alpha_trees.push_back(new DETree(alpha_samples[0], pi_low_limit, pi_high_limit));
 
             // STEP 2
-            for (size_t t = 1; t <= T; t++){
+            for (size_t t = 1; t < T; t++){
                 // STEP 2(a)
                 vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[(t - 1) % 2], N);
                 double sum_densities = 0.0;
@@ -123,9 +123,9 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             beta_trees.push_back(new DETree(beta_samples[0], pi_low_limit, pi_high_limit));
 
             // STEP 4
-            for (size_t t = T; t >= 1; t--){
+            for (size_t t = T - 1; t >= 1; t--){
                 // STEP 4(a)
-                int index_t = ((T + 1) - (t + 1)) % 2;
+                int index_t = ((T) - (t + 1)) % 2;
                 vector<Sample> temp = sampler.likelihood_weighted_resampler(beta_samples[index_t], N);
                 double sum_densities = 0.0;
 
@@ -157,11 +157,11 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             }
 
             // STEP 5
-            for (size_t t = 1; t <= T; t++){
+            for (size_t t = 1; t < T; t++){
                 vector<Sample> temp;
                 double sum_density = 0.0;
 
-                int index_t = (T + 1) - (t);
+                int index_t = (T) - (t);
 
                 // STEP 5(a)
                 for (int j = 0; j < N / 2; j++){
@@ -206,7 +206,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
             // STEP 1
             for (int i = 0; i < N; i++){
-                uniform_real_distribution<double> dist(1, T - 1);
+                uniform_real_distribution<double> dist(1, T - 2);
                 int t = dist(gen);
 
                 Sample x = sampler.sample(gamma_trees[t]);
@@ -219,7 +219,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
             // STEP 2
             for (int i = 0; i < N; i++){
-                uniform_real_distribution<double> dist(1, T);
+                uniform_real_distribution<double> dist(1, T - 1);
                 int t = dist(gen);
 
                 Sample x = sampler.sample(gamma_trees[t]);
