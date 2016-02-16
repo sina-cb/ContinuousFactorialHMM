@@ -117,8 +117,8 @@ void use_em_learning(){
         double t1 = tmr.elapsed();
 
         hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
-//        hmm.set_distributions(pi, m, v, 0.5);
-        hmm.learn_hmm(observations, MAX_ITERATION, N);
+        hmm.set_distributions(pi, m, v, 0.5);
+        hmm.learn_hmm(observations, 4, N);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Generating the MCFHMM time: " << (t2 - t1) << " seconds";
@@ -133,28 +133,29 @@ void use_em_learning(){
         double t1 = tmr.elapsed();
 
         //         int tr = 0;
-        //        for (size_t i = 1; i < TEST_OBS_C; i++){
+//                for (size_t i = 1; i < TEST_OBS_C; i++){
 //        obs->push_back((*observations)[observations->size() - 3]);
 //        obs->push_back((*observations)[observations->size() - 2]);
-//        obs->push_back((*observations)[observations->size() - 3]);
-        DETree forward = hmm.forward(observations, N_HMM_TEST);
+        obs->push_back((*observations)[7]);
+        DETree forward = hmm.forward(obs, N_HMM_TEST);
 
-        Sample sample = sampler.sample(&forward);
-//        for (size_t i = 0; i < 5; i++){
-//            Sample temp = sampler.sample(&forward);
-//            sample.values[0] = sample.values[0] + temp.values[0];
-//            sample.values[1] = sample.values[1] + temp.values[1];
-//            sample.values[2] = sample.values[2] + temp.values[2];
-//        }
+        Sample big_sample = sampler.sample(&forward);
+        for (size_t i = 0; i < 5; i++){
+            Sample temp = sampler.sample(&forward);
+            LOG(INFO) << "Temp " << i << ":\t"
+                      << temp.values[0] << "\t"
+                      << temp.values[1];
 
-//        sample.values[0] /= 6;
-//        sample.values[1] /= 6;
-//        sample.values[2] /= 6;
+            big_sample.values[0] = big_sample.values[0] + temp.values[0];
+            big_sample.values[1] = big_sample.values[1] + temp.values[1];
+        }
 
-        LOG(INFO) << "Sample:\t"
-                  << sample.values[0] << "\t"
-                  << sample.values[1] << "\t"
-                  << sample.values[2];
+        big_sample.values[0] /= 6;
+        big_sample.values[1] /= 6;
+
+        LOG(INFO) << "Big Sample:\t"
+                  << big_sample.values[0] << "\t"
+                  << big_sample.values[1];
         //        }
 
         //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
@@ -253,7 +254,6 @@ void init_pi(vector<Sample> *pi, int sample_count){
         Sample pi_temp;
         pi_temp.values.push_back(0.0);
         pi_temp.values.push_back(0.0);
-        pi_temp.values.push_back(0.0);
 
         pi->push_back(pi_temp);
     }
@@ -268,6 +268,7 @@ void init_m(vector<Sample> *m, int sample_count){
 
     if (file.is_open()){
         string line;
+        getline(file, line); // Skip the headers
 
         while(getline(file, line)){
             stringstream ssin(line);
@@ -299,6 +300,7 @@ void init_v(vector<Sample> *v, int sample_count){
 
     if (file.is_open()){
         string line;
+        getline(file, line); // Skip the headers
 
         while(getline(file, line)){
             stringstream ssin(line);
@@ -331,11 +333,9 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
     }
 
     // TODO: Add bounds to the vectors here!
-    double accel_min = -0.5;
-    double accel_w_min = -M_PI / 4;
+    double accel_min = -0.4;
 
-    double accel_max = 0.5;
-    double accel_w_max = M_PI / 4;
+    double accel_max = 0.4;
 
     double crosswalk_min = 0;
     double crosswalk_max = 1;
@@ -352,27 +352,21 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
     ////////// INIT PI BOUNDS //////////
     pi_low_limits->push_back(accel_min);
     pi_low_limits->push_back(accel_min);
-    pi_low_limits->push_back(accel_w_min);
 
     pi_high_limits->push_back(accel_max);
     pi_high_limits->push_back(accel_max);
-    pi_high_limits->push_back(accel_w_max);
 
 
     ////////// INIT M  BOUNDS //////////
     m_low_limits->push_back(accel_min);
     m_low_limits->push_back(accel_min);
-    m_low_limits->push_back(accel_w_min);
     m_low_limits->push_back(accel_min);
     m_low_limits->push_back(accel_min);
-    m_low_limits->push_back(accel_w_min);
 
     m_high_limits->push_back(accel_max);
     m_high_limits->push_back(accel_max);
-    m_high_limits->push_back(accel_w_max);
     m_high_limits->push_back(accel_max);
     m_high_limits->push_back(accel_max);
-    m_high_limits->push_back(accel_w_max);
 
 
     ////////// INIT V  BOUNDS //////////
@@ -383,7 +377,6 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
     v_low_limits->push_back(wall_min);
     v_low_limits->push_back(accel_min);
     v_low_limits->push_back(accel_min);
-    v_low_limits->push_back(accel_w_min);
 
     v_high_limits->push_back(crosswalk_max);
     v_high_limits->push_back(turn_point_max);
@@ -392,7 +385,6 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
     v_high_limits->push_back(wall_max);
     v_high_limits->push_back(accel_max);
     v_high_limits->push_back(accel_max);
-    v_high_limits->push_back(accel_w_max);
 }
 
 void init_observations(vector<Observation> * obs, size_t size){
@@ -404,6 +396,8 @@ void init_observations(vector<Observation> * obs, size_t size){
 
     if (file.is_open()){
         string line;
+        getline(file, line); // Skip the header
+
         while(getline(file, line)){
             stringstream ssin(line);
             Observation sample_obs;
