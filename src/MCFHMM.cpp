@@ -66,7 +66,10 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
     Sampler sampler;
     size_t T = observations->size();
 
-    init_hmm(N, N, N);
+    if (pi->size() < 1 || v->size() < 1 || m->size() < 1){
+        LOG(INFO) << "Init HMM Randomly!";
+        init_hmm_randomly(N, N, N);
+    }
 
     bool cond = true;
     size_t iteration = 0;
@@ -200,9 +203,9 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
             unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
             std::default_random_engine gen(seed);
 
-            vector<Sample> temp_m;
-            vector<Sample> temp_v;
-            vector<Sample> temp_pi;
+            vector<Sample> * temp_m = new vector<Sample>();
+            vector<Sample> * temp_v = new vector<Sample>();
+            vector<Sample> * temp_pi = new vector<Sample>();
 
             // STEP 1
             for (int i = 0; i < N; i++){
@@ -214,7 +217,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
                 Sample temp = x.combine(x_prime.values);
                 temp.p = 1.0 / N;
-                temp_m.push_back(temp);
+                temp_m->push_back(temp);
             }
 
             // STEP 2
@@ -226,29 +229,30 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
                 Sample temp = (*observations)[t].combine(x);
                 temp.p = 1.0 / N;
-                temp_v.push_back(temp);
+                temp_v->push_back(temp);
             }
 
             // STEP 3
             int pi_size = pi->size();
+            LOG(INFO) << pi_size;
             for (int i = 0; i < pi_size; i++){
-                temp_pi.push_back(sampler.sample(gamma_trees[0]));
+                temp_pi->push_back(sampler.sample(gamma_trees[0]));
             }
 
-            pi = &temp_pi;
+            delete pi;
+            pi = temp_pi;
             pi_tree->create_tree(*pi, pi_low_limit, pi_high_limit);
 
-            m =  &temp_m;
+            delete m;
+            m =  temp_m;
             m_tree->create_tree(*m, m_low_limit, m_high_limit);
 
-            v = &temp_v;
+            delete v;
+            v = temp_v;
             v_tree->create_tree(*v, v_low_limit, v_high_limit);
 
-            temp_pi.clear();
-            temp_m.clear();
-            temp_v.clear();
-
             LOG(INFO) << "End of M Step at iteration: " << iteration;
+
         }
 
         /////////////////ANNEALING/////////////////
@@ -283,9 +287,21 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 }
 
 void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sample> *v, double rho){
-    this->pi = pi;
-    this->m = m;
-    this->v = v;
+    this->pi = new vector<Sample>();
+    this->m = new vector<Sample>();
+    this->v = new vector<Sample>();
+
+    for (size_t i = 0; i < pi->size(); i++){
+        this->pi->push_back((*pi)[i]);
+    }
+
+    for (size_t i = 0; i < m->size(); i++){
+        this->m->push_back((*m)[i]);
+    }
+
+    for (size_t i = 0; i < v->size(); i++){
+        this->v->push_back((*v)[i]);
+    }
 
     this->rho = rho;
 
@@ -311,7 +327,7 @@ void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_li
     this->v_high_limit = v_high_limit;
 }
 
-void MCFHMM::init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v){
+void MCFHMM::init_hmm_randomly(int sample_size_pi, int sample_size_m, int sample_size_v){
 
     if (pi_low_limit == NULL){
         LOG(FATAL) << "Please set the limits first and then run this method!!!";

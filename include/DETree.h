@@ -12,10 +12,10 @@ class DETree{
 
 public:
     DETree();
-    DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
+    DETree(vector<Sample> sample_set, vector<double> *sample_low, vector<double> *sample_high);
     ~DETree();
 
-    void create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high);
+    void create_tree(const vector<Sample> sample_set, vector<double> *sample_low, vector<double> *sample_high);
     DETree create_conditional_tree(Sample given);
     double density_value(Sample sample, double rho);
 

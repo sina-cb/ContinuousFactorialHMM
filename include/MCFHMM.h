@@ -43,7 +43,7 @@ private:
 public:
     MCFHMM();
 
-    void init_hmm(int sample_size_pi, int sample_size_m, int sample_size_v);
+    void init_hmm_randomly(int sample_size_pi, int sample_size_m, int sample_size_v);
     void set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
                     vector<double> *m_low_limit, vector<double> *m_high_limit,
                     vector<double> *v_low_limit, vector<double> *v_high_limit

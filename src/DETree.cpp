@@ -11,7 +11,7 @@ DETree::DETree(){
     LOG(INFO) << "The DETree is not created, you should use create_tree explicitly to initialize the DETree";
 }
 
-DETree::DETree(vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
+DETree::DETree(vector<Sample> sample_set, vector<double> *sample_low, vector<double> *sample_high){
     create_tree(sample_set, sample_low, sample_high);
 }
 
@@ -20,8 +20,6 @@ DETree::~DETree(){
     for (size_t i = 0; i < nodes->size(); i++){
         delete (*nodes)[i];
     }
-
-//    LOG(INFO) << "DETREE DECONSTRUCTOR!";
 }
 
 double DETree::density_value(Sample sample, double rho){
@@ -60,7 +58,7 @@ double DETree::density_value(Sample sample, double rho){
 
 }
 
-void DETree::create_tree(const vector<Sample> &sample_set, vector<double> *sample_low, vector<double> *sample_high){
+void DETree::create_tree(const vector<Sample> sample_set, vector<double> *sample_low, vector<double> *sample_high){
     root = new DETreeNode(sample_set, 0, 'R', *sample_low, *sample_high);
 }
 
