@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(MCFHMM)
+project(Monte-Carlo-HMM)
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -53,7 +53,7 @@ endif()
 set(SRC
 	src/main.cpp
 	src/Sampler.cpp
-	src/MCFHMM.cpp
+	src/MCHMM.cpp
 	src/DETree.cpp
 	src/Sample.cpp
 	src/Observation.cpp
@@ -63,7 +63,7 @@ set(SRC
 set(SRC_FULLY
 	src/main_fully.cpp
 	src/Sampler.cpp
-	src/MCFHMM.cpp
+	src/MCHMM.cpp
 	src/DETree.cpp
 	src/Sample.cpp
 	src/Observation.cpp
@@ -72,7 +72,7 @@ set(SRC_FULLY
 
 set(HDRs
 	include/Sampler.h
-	include/MCFHMM.h
+	include/MCHMM.h
 	include/DETree.h
 	include/Sample.h
 	include/Observation.h

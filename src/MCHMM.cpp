@@ -1,4 +1,4 @@
-#include "MCFHMM.h"
+#include "MCHMM.h"
 #include <cmath>
 #include "Sampler.h"
 #include <random>
@@ -7,13 +7,13 @@
 using namespace std;
 using namespace google;
 
-MCFHMM::MCFHMM(){
+MCHMM::MCHMM(){
     pi = new vector<Sample>();
     m = new vector<Sample>();
     v = new vector<Sample>();
 }
 
-DETree MCFHMM::forward(vector<Observation> *observations, size_t N){
+DETree MCHMM::forward(vector<Observation> *observations, size_t N){
     vector<Sample> alpha_samples[2];
     Sampler sampler;
     size_t T = observations->size();
@@ -56,7 +56,7 @@ DETree MCFHMM::forward(vector<Observation> *observations, size_t N){
     return DETree(alpha_samples[(t - 1) % 2], pi_low_limit, pi_high_limit);
 }
 
-void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){
+void MCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){
 
     if (observations->size() < 2){
         LOG(ERROR) << "Not enough observation data!";
@@ -286,7 +286,7 @@ void MCFHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
     initialized = true;
 }
 
-void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sample> *v, double rho){
+void MCHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sample> *v, double rho){
     this->pi = new vector<Sample>();
     this->m = new vector<Sample>();
     this->v = new vector<Sample>();
@@ -312,7 +312,7 @@ void MCFHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sam
     initialized = true;
 }
 
-void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
+void MCHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
                         vector<double> *m_low_limit, vector<double> *m_high_limit,
                         vector<double> *v_low_limit, vector<double> *v_high_limit
                         )
@@ -327,7 +327,7 @@ void MCFHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_li
     this->v_high_limit = v_high_limit;
 }
 
-void MCFHMM::init_hmm_randomly(int sample_size_pi, int sample_size_m, int sample_size_v){
+void MCHMM::init_hmm_randomly(int sample_size_pi, int sample_size_m, int sample_size_v){
 
     if (pi_low_limit == NULL){
         LOG(FATAL) << "Please set the limits first and then run this method!!!";
@@ -361,15 +361,15 @@ void MCFHMM::init_hmm_randomly(int sample_size_pi, int sample_size_m, int sample
     initialized = true;
 }
 
-double MCFHMM::_rho(){
+double MCHMM::_rho(){
     return this->rho;
 }
 
-bool MCFHMM::initialized_(){
+bool MCHMM::initialized_(){
     return initialized;
 }
 
-void MCFHMM::init_GLOG(){
+void MCHMM::init_GLOG(){
     InitGoogleLogging("HMM");
     FLAGS_stderrthreshold = 0;
     FLAGS_log_dir = ".";

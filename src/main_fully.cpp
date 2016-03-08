@@ -6,7 +6,7 @@
 #include <glog/logging.h>
 #include "Sampler.h"
 #include "Sample.h"
-#include "MCFHMM.h"
+#include "MCHMM.h"
 #include "DETree.h"
 #include "Observation.h"
 #include "Timer.h"
@@ -88,7 +88,7 @@ void use_em_learning(){
     }
 
     // Generating the HMM from the gathered samples and the known limits
-    MCFHMM hmm;
+    MCHMM hmm;
     {
         Timer tmr;
         double t1 = tmr.elapsed();
@@ -97,7 +97,7 @@ void use_em_learning(){
         hmm.learn_hmm(observations, MAX_ITERATION, N);
 
         double t2 = tmr.elapsed();
-        LOG(INFO) << "Generating the MCFHMM time: " << (t2 - t1) << " seconds";
+        LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
     }
 
     //Testing the accuracy
@@ -120,7 +120,7 @@ void use_em_learning(){
         //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
 
         double t2 = tmr.elapsed();
-        LOG(INFO) << "Testing the MCFHMM time: " << (t2 - t1) << " seconds";
+        LOG(INFO) << "Testing the MCHMM time: " << (t2 - t1) << " seconds";
     }
 
 }
@@ -165,7 +165,7 @@ void use_precollected_samples(){
     }
 
     // Generating the HMM from the gathered samples and the known limits
-    MCFHMM hmm;
+    MCHMM hmm;
     {
         Timer tmr;
         double t1 = tmr.elapsed();
@@ -174,7 +174,7 @@ void use_precollected_samples(){
         hmm.set_distributions(pi, m, v, 0.5);
 
         double t2 = tmr.elapsed();
-        LOG(INFO) << "Generating the MCFHMM time: " << (t2 - t1) << " seconds";
+        LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
     }
 
     // Testing the accuracy
@@ -197,7 +197,7 @@ void use_precollected_samples(){
         //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
 
         double t2 = tmr.elapsed();
-        LOG(INFO) << "Testing the MCFHMM time: " << (t2 - t1) << " seconds";
+        LOG(INFO) << "Testing the MCHMM time: " << (t2 - t1) << " seconds";
     }
 }
 

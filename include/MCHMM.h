@@ -6,10 +6,10 @@
 #include "DETree.h"
 using namespace std;
 
-#ifndef MCFHMM_H
-#define MCFHMM_H
+#ifndef MCHMM_H
+#define MCHMM_H
 
-class MCFHMM{
+class MCHMM{
 
 private:
 
@@ -41,7 +41,7 @@ private:
 
 
 public:
-    MCFHMM();
+    MCHMM();
 
     void init_hmm_randomly(int sample_size_pi, int sample_size_m, int sample_size_v);
     void set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
