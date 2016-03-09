@@ -52,8 +52,6 @@ public:
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
     DETree forward(vector<Observation> *observations, size_t N);
 
-    void init_GLOG();
-
     double _rho();
     bool initialized_();
 };

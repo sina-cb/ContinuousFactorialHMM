@@ -313,9 +313,9 @@ void MCHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Samp
 }
 
 void MCHMM::set_limits(vector<double> *pi_low_limit, vector<double> *pi_high_limit,
-                        vector<double> *m_low_limit, vector<double> *m_high_limit,
-                        vector<double> *v_low_limit, vector<double> *v_high_limit
-                        )
+                       vector<double> *m_low_limit, vector<double> *m_high_limit,
+                       vector<double> *v_low_limit, vector<double> *v_high_limit
+                       )
 {
     this->pi_low_limit = pi_low_limit;
     this->pi_high_limit = pi_high_limit;
@@ -367,13 +367,4 @@ double MCHMM::_rho(){
 
 bool MCHMM::initialized_(){
     return initialized;
-}
-
-void MCHMM::init_GLOG(){
-    InitGoogleLogging("HMM");
-    FLAGS_stderrthreshold = 0;
-    FLAGS_log_dir = ".";
-    FLAGS_minloglevel = 0;
-    //FLAGS_logtostderr = true;
-    //SetLogDestination(google::INFO, "./info");
 }

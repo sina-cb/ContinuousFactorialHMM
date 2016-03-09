@@ -54,6 +54,7 @@ set(SRC
 	src/main.cpp
 	src/Sampler.cpp
 	src/MCHMM.cpp
+	src/LMCHMM.cpp
 	src/DETree.cpp
 	src/Sample.cpp
 	src/Observation.cpp
@@ -64,6 +65,7 @@ set(SRC_FULLY
 	src/main_fully.cpp
 	src/Sampler.cpp
 	src/MCHMM.cpp
+	src/LMCHMM.cpp
 	src/DETree.cpp
 	src/Sample.cpp
 	src/Observation.cpp
@@ -73,6 +75,7 @@ set(SRC_FULLY
 set(HDRs
 	include/Sampler.h
 	include/MCHMM.h
+	include/LMCHMM.h
 	include/DETree.h
 	include/Sample.h
 	include/Observation.h
