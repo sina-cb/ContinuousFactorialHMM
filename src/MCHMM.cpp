@@ -13,7 +13,7 @@ MCHMM::MCHMM(){
     v = new vector<Sample>();
 }
 
-DETree MCHMM::forward(vector<Observation> *observations, size_t N){
+DETree * MCHMM::forward(vector<Observation> *observations, size_t N){
     vector<Sample> alpha_samples[2];
     Sampler sampler;
     size_t T = observations->size();
@@ -53,7 +53,7 @@ DETree MCHMM::forward(vector<Observation> *observations, size_t N){
         alpha_samples[t % 2] = temp;
     }
 
-    return DETree(alpha_samples[(t - 1) % 2], pi_low_limit, pi_high_limit);
+    return new DETree(alpha_samples[(t - 1) % 2], pi_low_limit, pi_high_limit);
 }
 
 void MCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){
@@ -367,4 +367,8 @@ double MCHMM::_rho(){
 
 bool MCHMM::initialized_(){
     return initialized;
+}
+
+DETree* MCHMM::pi_tree_(){
+    return pi_tree;
 }

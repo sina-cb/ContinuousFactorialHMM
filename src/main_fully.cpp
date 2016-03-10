@@ -13,6 +13,9 @@
 using namespace std;
 using namespace google;
 
+#define HMM_TYPE 0
+vector<string> hmm_types = {"Monte Carlo HMM", "Layered Monte Carlo HMM"};
+
 #define N 100
 #define N_HMM_TEST 100
 #define MAX_ITERATION 30
@@ -32,7 +35,7 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
                  vector<double> * v_low_limits, vector<double> * v_high_limits);
 void init_observations(vector<Observation> * obs, size_t size);
 
-void init_GLOG(int argc, char* argv[]);
+void init_GLOG();
 vector<Sample> fixed_sample_set();
 void print(vector<Sample> dist);
 
@@ -43,7 +46,7 @@ void run_small_tree_creation();
 
 int main(int argc, char* argv[])
 {
-    init_GLOG(argc, argv);
+    init_GLOG();
 
 #if USE_EM
     use_em_learning();
@@ -61,145 +64,145 @@ int main(int argc, char* argv[])
 void use_em_learning(){
 
     // Initializing the limits for the values that each variable can take
-//    vector<double> * pi_low_limits = new vector<double>();
-//    vector<double> * pi_high_limits = new vector<double>();
-//    vector<double> * m_low_limits = new vector<double>();
-//    vector<double> * m_high_limits = new vector<double>();
-//    vector<double> * v_low_limits = new vector<double>();
-//    vector<double> * v_high_limits = new vector<double>();
-//    {
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+    vector<double> * pi_low_limits = new vector<double>();
+    vector<double> * pi_high_limits = new vector<double>();
+    vector<double> * m_low_limits = new vector<double>();
+    vector<double> * m_high_limits = new vector<double>();
+    vector<double> * v_low_limits = new vector<double>();
+    vector<double> * v_high_limits = new vector<double>();
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        init_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
+        init_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
 
-//        double t2 = tmr.elapsed();
-//        LOG(INFO) << "Initializing the limits time: " << (t2 - t1) << " seconds";
-//    }
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Initializing the limits time: " << (t2 - t1) << " seconds";
+    }
 
-//    vector<Observation> *observations = new vector<Observation>();
-//    {
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+    vector<Observation> *observations = new vector<Observation>();
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        init_observations(observations, INIT_OBS_C);
+        init_observations(observations, INIT_OBS_C);
 
-//        double t2 = tmr.elapsed();
-//        LOG(INFO) << "Initializing the observations time: " << (t2 - t1) << " seconds";
-//    }
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Initializing the observations time: " << (t2 - t1) << " seconds";
+    }
 
-//    // Generating the HMM from the gathered samples and the known limits
-//    LMCHMM hmm;
-//    {
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+    // Generating the HMM from the gathered samples and the known limits
+    MCHMM hmm;
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
-//        hmm.learn_hmm(observations, MAX_ITERATION, N);
+        hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
+        hmm.learn_hmm(observations, MAX_ITERATION, N);
 
-//        double t2 = tmr.elapsed();
-//        LOG(INFO) << "Generating the LMCHMM time: " << (t2 - t1) << " seconds";
-//    }
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
+    }
 
-//    //Testing the accuracy
-//    vector<Observation> * obs = new vector<Observation>;
-//    {
-//        Sampler sampler;
+    //Testing the accuracy
+    vector<Observation> * obs = new vector<Observation>;
+    {
+        Sampler sampler;
 
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        //         int tr = 0;
-//        for (size_t i = 1; i < TEST_OBS_C; i++){
-//            init_observations(obs, i);
-//            DETree forward = hmm.forward(obs, N_HMM_TEST);
+        //         int tr = 0;
+        for (size_t i = 1; i < TEST_OBS_C; i++){
+            init_observations(obs, i);
+            DETree forward = *(hmm.forward(obs, N_HMM_TEST));
 
-//            Sample sample = sampler.sample(&forward);
-//            LOG(INFO) << "Sample: " << sample.values[0];
-//        }
+            Sample sample = sampler.sample(&forward);
+            LOG(INFO) << "Sample: " << sample.values[0];
+        }
 
-//        //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
+        //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
 
-//        double t2 = tmr.elapsed();
-//        LOG(INFO) << "Testing the LMCHMM time: " << (t2 - t1) << " seconds";
-//    }
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Testing the MCHMM time: " << (t2 - t1) << " seconds";
+    }
 
 }
 
 void use_precollected_samples(){
     // Gathering samples from the distributions
-//    vector<Sample> *pi = new vector<Sample>();
-//    vector<Sample> *m = new vector<Sample>();
-//    vector<Sample> *v = new vector<Sample>();
-//    {
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+    vector<Sample> *pi = new vector<Sample>();
+    vector<Sample> *m = new vector<Sample>();
+    vector<Sample> *v = new vector<Sample>();
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        init_pi(pi, PI_SAMPLE_C);
-//        init_m(m, M_SAMPLE_C);
-//        init_v(v, V_SAMPLE_C);
+        init_pi(pi, PI_SAMPLE_C);
+        init_m(m, M_SAMPLE_C);
+        init_v(v, V_SAMPLE_C);
 
-//        LOG(INFO) << "PI size: " << pi->size();
-//        LOG(INFO) << "M size: " << m->size();
-//        LOG(INFO) << "V size: " << v->size();
+        LOG(INFO) << "PI size: " << pi->size();
+        LOG(INFO) << "M size: " << m->size();
+        LOG(INFO) << "V size: " << v->size();
 
-//        double t2 = tmr.elapsed();
+        double t2 = tmr.elapsed();
 
-//        LOG(INFO) << "Generating time: " << (t2 - t1) << " seconds";
-//    }
+        LOG(INFO) << "Generating time: " << (t2 - t1) << " seconds";
+    }
 
-//    // Initializing the limits for the values that each variable can take
-//    vector<double> * pi_low_limits = new vector<double>();
-//    vector<double> * pi_high_limits = new vector<double>();
-//    vector<double> * m_low_limits = new vector<double>();
-//    vector<double> * m_high_limits = new vector<double>();
-//    vector<double> * v_low_limits = new vector<double>();
-//    vector<double> * v_high_limits = new vector<double>();
-//    {
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+    // Initializing the limits for the values that each variable can take
+    vector<double> * pi_low_limits = new vector<double>();
+    vector<double> * pi_high_limits = new vector<double>();
+    vector<double> * m_low_limits = new vector<double>();
+    vector<double> * m_high_limits = new vector<double>();
+    vector<double> * v_low_limits = new vector<double>();
+    vector<double> * v_high_limits = new vector<double>();
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        init_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
+        init_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
 
-//        double t2 = tmr.elapsed();
-//        LOG(INFO) << "Initializing the limits time: " << (t2 - t1) << " seconds";
-//    }
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Initializing the limits time: " << (t2 - t1) << " seconds";
+    }
 
-//    // Generating the HMM from the gathered samples and the known limits
-//    LMCHMM hmm;
-//    {
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+    // Generating the HMM from the gathered samples and the known limits
+    MCHMM hmm;
+    {
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
-//        hmm.set_distributions(pi, m, v, 0.5);
+        hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
+        hmm.set_distributions(pi, m, v, 0.5);
 
-//        double t2 = tmr.elapsed();
-//        LOG(INFO) << "Generating the LMCHMM time: " << (t2 - t1) << " seconds";
-//    }
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
+    }
 
-//    // Testing the accuracy
-//    vector<Observation> * obs = new vector<Observation>;
-//    {
-//        Sampler sampler;
+    // Testing the accuracy
+    vector<Observation> * obs = new vector<Observation>;
+    {
+        Sampler sampler;
 
-//        Timer tmr;
-//        double t1 = tmr.elapsed();
+        Timer tmr;
+        double t1 = tmr.elapsed();
 
-//        //         int tr = 0;
-//        for (size_t i = 1; i < TEST_OBS_C; i++){
-//            init_observations(obs, i);
-//            DETree forward = hmm.forward(obs, N_HMM_TEST);
+        //         int tr = 0;
+        for (size_t i = 1; i < TEST_OBS_C; i++){
+            init_observations(obs, i);
+            DETree forward = *(hmm.forward(obs, N_HMM_TEST));
 
-//            Sample sample = sampler.sample(&forward);
-//            LOG(INFO) << "Sample: " << sample.values[0];
-//        }
+            Sample sample = sampler.sample(&forward);
+            LOG(INFO) << "Sample: " << sample.values[0];
+        }
 
-//        //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
+        //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
 
-//        double t2 = tmr.elapsed();
-//        LOG(INFO) << "Testing the LMCHMM time: " << (t2 - t1) << " seconds";
-//    }
+        double t2 = tmr.elapsed();
+        LOG(INFO) << "Testing the MCHMM time: " << (t2 - t1) << " seconds";
+    }
 }
 
 void init_pi(vector<Sample> *pi, int sample_count){
@@ -332,8 +335,8 @@ void print(vector<Sample> dist){
     }
 }
 
-void init_GLOG(int argc, char* argv[]){
-    InitGoogleLogging(argv[0]);
+void init_GLOG(){
+    InitGoogleLogging(((string)hmm_types[HMM_TYPE]).c_str());
     FLAGS_stderrthreshold = 0;
     FLAGS_log_dir = ".";
     FLAGS_minloglevel = 0;
