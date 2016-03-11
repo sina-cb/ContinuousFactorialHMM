@@ -58,17 +58,24 @@ DETree * MCHMM::forward(vector<Observation> *observations, size_t N){
 }
 
 vector<DETree *> MCHMM::gamma(vector<Observation> *observations, size_t N){
-    size_t T = observations->size();
-    vector< vector<Sample> > alpha_samples;
     Sampler sampler;
+    size_t T = observations->size();
 
-    alpha_samples.push_back(sampler.resample_from(pi_tree, N));
+    vector<Sample> alpha_samples[2];
+    vector<Sample> beta_samples[2];
+
+    vector<DETree*> alpha_trees;
+    vector<DETree*> beta_trees;
+    vector<DETree*> gamma_trees;
+
+    // STEP 1
+    alpha_samples[0] = sampler.resample_from(pi_tree, N);
+    alpha_trees.push_back(new DETree(alpha_samples[0], pi_low_limit, pi_high_limit));
 
     // STEP 2
-    size_t t = 0;
-    for (t = 1; t < T; t++){
+    for (size_t t = 1; t < T; t++){
         // STEP 2(a)
-        vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples.back(), N);
+        vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[(t - 1) % 2], N);
         double sum_densities = 0.0;
 
         for (size_t i = 0; i < temp.size(); i++){
@@ -94,17 +101,95 @@ vector<DETree *> MCHMM::gamma(vector<Observation> *observations, size_t N){
         }
 
         // STEP 2(d)
-        alpha_samples.push_back(temp);
+        alpha_samples[t % 2] = temp;
+        alpha_trees.push_back(new DETree(temp, pi_low_limit, pi_high_limit));
     }
 
-    assert(alpha_samples.size() == T);
+    // STEP 3
+    beta_samples[0] = sampler.uniform_sampling(pi_low_limit, pi_high_limit, N);
+    beta_trees.push_back(new DETree(beta_samples[0], pi_low_limit, pi_high_limit));
 
-    vector<DETree *> results;
-    for (size_t i = 0; i < alpha_samples.size(); i++){
-        results.push_back(new DETree(alpha_samples[i], pi_low_limit, pi_high_limit));
+    // STEP 4
+    for (size_t t = T - 1; t >= 1; t--){
+        // STEP 4(a)
+        int index_t = ((T) - (t + 1)) % 2;
+        vector<Sample> temp = sampler.likelihood_weighted_resampler(beta_samples[index_t], N);
+        double sum_densities = 0.0;
+
+        for (size_t i = 0; i < temp.size(); i++){
+            // STEP 4(b)
+            Sample x = sampler.sample_given(m_tree, temp[i]);
+
+            for (size_t i = 0; i < temp[i].size(); i++){
+                x.values.pop_back();
+            }
+
+            // STEP 4(c)
+            Sample v_temp = (*observations)[t].combine(x);
+            double density = v_tree->density_value(v_temp, rho);
+            x.p = density;
+
+            sum_densities += density;
+            temp[i] = x;
+        }
+
+        // Normalizing the probabilities
+        for (size_t i = 0; i < temp.size(); i++){
+            temp[i].p = temp[i].p / sum_densities;
+        }
+
+        // STEP 4(d)
+        beta_samples[(index_t + 1) % 2] = temp;
+        beta_trees.push_back(new DETree(temp, pi_low_limit, pi_high_limit));
     }
 
-    return results;
+    // STEP 5
+    for (size_t t = 0; t < T; t++){
+        vector<Sample> temp;
+        double sum_density = 0.0;
+
+        int index_t = (T) - (t + 1);
+
+        // STEP 5(a)
+        for (size_t j = 0; j < N / 2; j++){
+            Sample sample = sampler.sample(alpha_trees[t]);
+            sample.p = (*beta_trees[index_t]).density_value(sample, rho);
+            sum_density += sample.p;
+            temp.push_back(sample);
+        }
+
+        // STEP 5(b)
+        for (size_t j = 0; j < N - (N / 2); j++){
+            Sample sample = sampler.sample(beta_trees[index_t]);
+            sample.p = (*alpha_trees[t]).density_value(sample, rho);
+            sum_density += sample.p;
+            temp.push_back(sample);
+        }
+
+        // Normalizing the probabilities
+        for (size_t i = 0; i < temp.size(); i++){
+            temp[i].p = temp[i].p / sum_density;
+        }
+
+        gamma_trees.push_back(new DETree(temp, pi_low_limit, pi_high_limit));
+    }
+
+    alpha_samples[0].clear();
+    alpha_samples[1].clear();
+    beta_samples[0].clear();
+    beta_samples[1].clear();
+
+    for (size_t i = 0; i < alpha_trees.size(); i++){
+        delete alpha_trees[i];
+    }
+
+    for (size_t i = 0; i < beta_trees.size(); i++){
+        delete beta_trees[i];
+    }
+
+    assert(gamma_trees.size() == T);
+
+    return gamma_trees;
 }
 
 void MCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){

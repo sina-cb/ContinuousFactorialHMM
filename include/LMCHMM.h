@@ -29,8 +29,8 @@ public:
                     size_t level);
     void set_layers(size_t layers_count);
 
-    void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N); //TODO: Implement
-    vector<DETree> forward(vector<Observation> *observations, size_t N, size_t level);
+    void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
+    vector<DETree> forward(vector<Observation> *observations, size_t N, size_t level); //TODO: Implement
     vector<Observation> most_probable_seq(vector<Observation> * observations, size_t level, int N);
 
     double _rho();
