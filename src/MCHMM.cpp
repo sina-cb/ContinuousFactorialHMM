@@ -14,6 +14,12 @@ MCHMM::MCHMM(){
     v = new vector<Sample>();
 }
 
+/**
+ * @brief MCHMM::forward Goes one step forward in time according to the HMM distributions
+ * @param observations Observations needed to do the reasoning based on the HMM
+ * @param N Number of samples used in the resampling step of any sampling inside this method
+ * @return Alpha DETree for the next time step distribution
+ */
 DETree * MCHMM::forward(vector<Observation> *observations, size_t N){
     vector<Sample> alpha_samples[2];
     Sampler sampler;
@@ -54,9 +60,24 @@ DETree * MCHMM::forward(vector<Observation> *observations, size_t N){
         alpha_samples[t % 2] = temp;
     }
 
-    return new DETree(alpha_samples[(t - 1) % 2], pi_low_limit, pi_high_limit);
+    vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples[(t - 1) % 2], N);
+    for (size_t i = 0; i < temp.size(); i++){
+        // STEP 2(b)
+        Sample x = sampler.sample_given(m_tree, temp[i]);
+        x.p = 1.0 / temp.size();
+        temp[i] = x;
+    }
+
+    return new DETree(temp, pi_low_limit, pi_high_limit);
 }
 
+/**
+ * @brief MCHMM::gamma It perform the forward-backward algorithms and combine the results to get the
+ * gamma distribution, it is useful mostly for getting the most probable states
+ * @param observations Observations needed to do the reasoning based on the HMM
+ * @param N Number of samples used in the resampling step of any sampling inside this method
+ * @return Gamma DETrees for each observation
+ */
 vector<DETree *> MCHMM::gamma(vector<Observation> *observations, size_t N){
     Sampler sampler;
     size_t T = observations->size();
@@ -192,6 +213,12 @@ vector<DETree *> MCHMM::gamma(vector<Observation> *observations, size_t N){
     return gamma_trees;
 }
 
+/**
+ * @brief MCHMM::learn_hmm it takes in some observations and perform the EM as many iterations as the max_iteration arg
+ * @param observations Observations needed for learning the HMM distributions
+ * @param max_iteration Maximum number of iterations performed for the EM
+ * @param N Number of samples used in the resampling step of any sampling inside this method
+ */
 void MCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){
 
     if (observations->size() < 2){
@@ -370,7 +397,6 @@ void MCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, i
 
             // STEP 3
             int pi_size = pi->size();
-            LOG(INFO) << pi_size;
             for (int i = 0; i < pi_size; i++){
                 temp_pi->push_back(sampler.sample(gamma_trees[0]));
             }
@@ -422,6 +448,13 @@ void MCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, i
     initialized = true;
 }
 
+/**
+ * @brief MCHMM::set_distributions Instead of learning the distributions one can use this to prime the HMM with pre-collected samples
+ * @param pi Samples collected for the initial state distribution PI
+ * @param m Samples collected for the transition distribution M
+ * @param v Samples collected for the observation distribution NU
+ * @param rho Amount of effect that different levels of the DETree have on the computed density value (default: 0.5)
+ */
 void MCHMM::set_distributions(vector<Sample> *pi, vector<Sample> *m, vector<Sample> *v, double rho){
     this->pi = new vector<Sample>();
     this->m = new vector<Sample>();

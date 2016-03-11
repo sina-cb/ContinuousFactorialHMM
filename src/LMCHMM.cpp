@@ -48,12 +48,29 @@ void LMCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
     }
 }
 
-vector<DETree> LMCHMM::forward(vector<Observation> *observations, size_t N, size_t level){
-    if (level >= layers.size()){
-        LOG(FATAL) << "Level is greater than the layers' count!";
+vector<DETree *> LMCHMM::forward(vector<Observation> *observations, size_t N){
+    if (!initialized_()){
+        LOG(FATAL) << "Not all HMMs in layers are initialized!";
+    }
+    vector<DETree *> results;
+
+    MCHMM * temp_hmm = (MCHMM*)layers[0];
+    DETree * alpha_tree = temp_hmm->forward(observations, N);
+    results.push_back(alpha_tree);
+
+    vector<Observation> obs;
+    for (size_t i = 0; i < observations->size(); i++){
+        obs.push_back((*observations)[i]);
     }
 
+    for (size_t i = 1; i < layers.size(); i++){
+        obs = most_probable_seq(&obs, i, N);
+        temp_hmm = (MCHMM*)layers[i];
+        alpha_tree = temp_hmm->forward(&obs, N);
+        results.push_back(alpha_tree);
+    }
 
+    return results;
 }
 
 vector<Observation> LMCHMM::most_probable_seq(vector<Observation> * observations, size_t level, int N){
