@@ -65,21 +65,18 @@ vector<Observation> LMCHMM::most_probable_seq(vector<Observation> * observations
     Sampler sampler;
 
     MCHMM * temp_hmm = (MCHMM*)layers[level];
+    trees = temp_hmm->gamma(observations, N);
+
     vector<Observation> observations_temp;
-    for (size_t i = 0; i < observations->size(); i++){
-        observations_temp.push_back((*observations)[i]);
-        DETree * tree = temp_hmm->forward(&observations_temp, N);
-        trees.push_back(tree);
-
-    }
-
-    observations_temp.clear();
-
     for (size_t i = 0; i < trees.size(); i++){
         Sample sample = sampler.sample(trees[i]);
         Observation state;
         state = state.convert(sample);
         observations_temp.push_back(state);
+    }
+
+    for (size_t i = 0; i < trees.size(); i++){
+        delete trees[i];
     }
 
     return observations_temp;

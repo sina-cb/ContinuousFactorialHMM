@@ -4,6 +4,7 @@
 #include <random>
 #include <chrono>
 #include <glog/logging.h>
+#include <cassert>
 using namespace std;
 using namespace google;
 
@@ -54,6 +55,56 @@ DETree * MCHMM::forward(vector<Observation> *observations, size_t N){
     }
 
     return new DETree(alpha_samples[(t - 1) % 2], pi_low_limit, pi_high_limit);
+}
+
+vector<DETree *> MCHMM::gamma(vector<Observation> *observations, size_t N){
+    size_t T = observations->size();
+    vector< vector<Sample> > alpha_samples;
+    Sampler sampler;
+
+    alpha_samples.push_back(sampler.resample_from(pi_tree, N));
+
+    // STEP 2
+    size_t t = 0;
+    for (t = 1; t < T; t++){
+        // STEP 2(a)
+        vector<Sample> temp = sampler.likelihood_weighted_resampler(alpha_samples.back(), N);
+        double sum_densities = 0.0;
+
+        for (size_t i = 0; i < temp.size(); i++){
+            // STEP 2(b)
+            Sample x = sampler.sample_given(m_tree, temp[i]);
+
+            for (size_t i = 0; i < temp[i].size(); i++){
+                x.values.pop_back();
+            }
+
+            // STEP 2(c)
+            Sample v_temp = (*observations)[t].combine(x);
+            double density = v_tree->density_value(v_temp, rho);
+            x.p = density;
+
+            sum_densities += density;
+            temp[i] = x;
+        }
+
+        // Normalizing the probabilities
+        for (size_t i = 0; i < temp.size(); i++){
+            temp[i].p = temp[i].p / sum_densities;
+        }
+
+        // STEP 2(d)
+        alpha_samples.push_back(temp);
+    }
+
+    assert(alpha_samples.size() == T);
+
+    vector<DETree *> results;
+    for (size_t i = 0; i < alpha_samples.size(); i++){
+        results.push_back(new DETree(alpha_samples[i], pi_low_limit, pi_high_limit));
+    }
+
+    return results;
 }
 
 void MCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, int N){
