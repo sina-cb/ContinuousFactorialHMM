@@ -48,6 +48,39 @@ void LMCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
     }
 }
 
+void LMCHMM::learn_hmm_separately(vector<Observation> *observations, size_t max_iteration, int N){
+
+    if (layers.size() <= 0){
+        LOG(FATAL) << "No HMM existing in the layers!!!";
+    }
+
+
+    // Get the observations for the first level HMM
+    vector<Observation> obs;
+    for (size_t i = 0; i < observations->size(); i++){
+        obs.push_back((*observations)[i]);
+    }
+
+    // Repeat the HMM learning for each level
+    for (size_t i = 0; i < layers.size(); i++){
+        // Do an EM for the ith level HMM
+        ((MCHMM*)layers[i])->learn_hmm(&obs, max_iteration, N);
+        ind_initialized[i] = ((MCHMM*)layers[i])->initialized_();
+        LOG(INFO) << "EM Finished for HMM in level " << i;
+
+        // Get the most probable sequence of states and use it as the observation for the next state
+        if (i < layers.size() - 1){
+            obs = most_probable_seq(observations, i, N);
+            LOG(INFO) << "Got the observation for the next level HMM from HMM in level " << i;
+        }
+    }
+
+
+    if (!initialized_()){
+        LOG(FATAL) << "Something went wrong in the learning proces!!!";
+    }
+}
+
 vector<DETree *> LMCHMM::forward(vector<Observation> *observations, size_t N){
     if (!initialized_()){
         LOG(FATAL) << "Not all HMMs in layers are initialized!";

@@ -136,6 +136,26 @@ Sample Sampler::sample(DETree *tree){
     return sample;
 }
 
+Sample Sampler::sample_avg(DETree *tree, int N){
+    Sample sample_;
+    sample_ = sample(tree);
+
+    for (size_t j = 1; j < N; j++){
+        Sample temp;
+        temp = sample(tree);
+
+        for (size_t i = 0; i < temp.values.size(); i++){
+            sample_.values[i] += temp.values[i];
+        }
+    }
+
+    for (size_t i = 0; i < sample_.values.size(); i++){
+        sample_.values[i] /= ((double)N);
+    }
+
+    return sample_;
+}
+
 Sample Sampler::sample_given(DETree *tree, Sample &given){
     Sample sample;
     sample.init_rand(&tree->get_root()->node_lower_bounds, &tree->get_root()->node_higher_bounds);
