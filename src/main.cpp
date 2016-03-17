@@ -19,13 +19,13 @@ using namespace google;
 #define HMM_TYPE 1
 
 #define N 30
-#define N_HMM_TEST 100
+//#define N_HMM_TEST 100
 #define MAX_ITERATION 10
-#define INIT_OBS_C 100
-#define TEST_OBS_C 50
-#define PI_SAMPLE_C 20
-#define M_SAMPLE_C 200
-#define V_SAMPLE_C 200
+#define INIT_OBS_C 500
+//#define TEST_OBS_C 50
+//#define PI_SAMPLE_C 20
+//#define M_SAMPLE_C 200
+//#define V_SAMPLE_C 200
 
 #define USE_EM_ONLY 0
 
