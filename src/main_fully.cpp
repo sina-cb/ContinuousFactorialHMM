@@ -18,10 +18,9 @@ using namespace google;
 
 #define HMM_TYPE 1
 
-#define N 30
+#define N 80
 //#define N_HMM_TEST 100
-#define MAX_ITERATION 10
-#define INIT_OBS_C 500
+#define MAX_ITERATION 2
 //#define TEST_OBS_C 50init_limits_hmm_1
 //#define PI_SAMPLE_C 20
 //#define M_SAMPLE_C 200
@@ -38,7 +37,7 @@ void init_limits_hmm_0(vector<double> * pi_low_limits, vector<double> * pi_high_
 void init_limits_hmm_1(vector<double> * pi_low_limits, vector<double> * pi_high_limits,
                        vector<double> * m_low_limits, vector<double> * m_high_limits,
                        vector<double> * v_low_limits, vector<double> * v_high_limits);
-void init_observations(vector<Observation> * obs, size_t size);
+void init_observations(vector<Observation> * obs);
 void init_distributions(vector<Sample> * pi_0, vector<Sample> * m_0, vector<Sample> * v_0,
                         vector<Sample> * pi_1, vector<Sample> * m_1, vector<Sample> * v_1);
 
@@ -87,7 +86,7 @@ int main(int argc, char** argv){
         Timer tmr;
         double t1 = tmr.elapsed();
 
-        init_observations(observations, INIT_OBS_C);
+        init_observations(observations);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Initializing the observations time: " << (t2 - t1) << " seconds";
@@ -123,9 +122,9 @@ int main(int argc, char** argv){
         hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
 #endif
 
-        hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
+        //hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
 
-        //hmm.learn_hmm(observations, MAX_ITERATION, N);
+        hmm.learn_hmm(observations, MAX_ITERATION, N);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
@@ -134,9 +133,9 @@ int main(int argc, char** argv){
     // Testing
     {
         Sampler sampler;
-        int true_vel = 0;
 
         size_t count_ = (observations->size() - 4);
+        size_t true_count = 0;
         for (size_t i = 0; i < count_; i++){
             vector<Observation> obs;
             for (size_t j = 0; j <= i; j++){
@@ -147,8 +146,18 @@ int main(int argc, char** argv){
             Sample sample_0 = sampler.sample_avg(trees[0], 5);
             Sample sample_1 = sampler.sample_avg(trees[1], 5);
 
-            LOG(INFO) << setprecision(3) << i << ":\tSample V: " << sample_0.values[0] << "\t" << sample_0.values[1];
-            LOG(INFO) << setprecision(3) << i << ":\tSample A: " << sample_1.values[0] << "\t" << sample_1.values[1];
+            double est = std::sqrt(pow(sample_0.values[0], 2) + pow(sample_0.values[1], 2));
+            double real1 = std::sqrt(pow((*m_0)[i].values[0], 2) + pow((*m_0)[i].values[1], 2));
+            double real2 = std::sqrt(pow((*m_0)[i].values[2], 2) + pow((*m_0)[i].values[3], 2));
+
+            if (std::abs(est - real1) < 0.1 || std::abs(est - real2) < 0.1){
+                true_count++;
+            }
+
+            LOG(INFO) << setprecision(3) << i << ":\tSample V: " << est;
+            LOG(INFO) << setprecision(3) << i << ":\tReal V:   " << real1;
+            LOG(INFO) << setprecision(3) << i << ":\tReal V:   " << real2;
+//            LOG(INFO) << setprecision(3) << i << ":\tSample A: " << sample_1.values[0] << "\t" << sample_1.values[1];
             LOG(INFO) << "";
 
             for (size_t i = 0; i < trees.size(); i++){
@@ -156,14 +165,14 @@ int main(int argc, char** argv){
             }
         }
 
-//        LOG(INFO) << "Trues: " << true_vel << "\tAccuracy: " << (((double)true_vel) / count_ * 100) << "%";
+        LOG(INFO) << "Trues: " << true_count << "\tAccuracy: " << (((double)true_count) / count_ * 100) << "%";
     }
 
     return 0;
 }
 
-double min_v = -0.4;
-double max_v = 0.4;
+double min_v = -0.8;
+double max_v = 0.8;
 
 double min_a = -.1;
 double max_a = .1;
@@ -255,7 +264,7 @@ void init_limits_hmm_1(vector<double> *pi_low_limits, vector<double> *pi_high_li
     v_high_limits->push_back(max_a);
 }
 
-void init_observations(vector<Observation> *obs, size_t size){
+void init_observations(vector<Observation> *obs){
 
     if (!obs){
         LOG(FATAL) << "Observation vector was NULL!";

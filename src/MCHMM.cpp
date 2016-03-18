@@ -5,6 +5,7 @@
 #include <chrono>
 #include <glog/logging.h>
 #include <cassert>
+#include <boost/math/distributions/students_t.hpp>
 using namespace std;
 using namespace google;
 
