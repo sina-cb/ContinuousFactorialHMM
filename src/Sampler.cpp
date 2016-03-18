@@ -140,7 +140,7 @@ Sample Sampler::sample_avg(DETree *tree, int N){
     Sample sample_;
     sample_ = sample(tree);
 
-    for (size_t j = 1; j < N; j++){
+    for (int j = 1; j < N; j++){
         Sample temp;
         temp = sample(tree);
 
