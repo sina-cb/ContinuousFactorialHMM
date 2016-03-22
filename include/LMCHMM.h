@@ -32,7 +32,8 @@ public:
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
     void learn_hmm_separately(vector<Observation> *observations, size_t max_iteration, int N);
 
-    vector<DETree *> forward(vector<Observation> *observations, size_t N); //TODO: Implement
+    vector<DETree *> forward(vector<Observation> *observations, size_t N);
+    vector<DETree *> forward_one_step(vector<Observation> *observations, size_t N, vector<DETree *> old_alphas); // Not implemented
     vector<Observation> most_probable_seq(vector<Observation> * observations, size_t level, int N);
 
     double _rho();

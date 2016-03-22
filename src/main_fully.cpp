@@ -18,15 +18,16 @@ using namespace google;
 
 #define HMM_TYPE 1
 
-#define N 80
+#define N 40
 //#define N_HMM_TEST 100
-#define MAX_ITERATION 2
+#define MAX_ITERATION 3
 //#define TEST_OBS_C 50init_limits_hmm_1
 //#define PI_SAMPLE_C 20
 //#define M_SAMPLE_C 200
 //#define V_SAMPLE_C 200
 
 #define USE_EM_ONLY 0
+#define GRID_SEARCH_CV 0
 
 vector<string> hmm_types = {"Monte Carlo HMM", "Layered Monte Carlo HMM"};
 
@@ -109,6 +110,8 @@ int main(int argc, char** argv){
         LOG(INFO) << "Initializing the distributions time: " << (t2 - t1) << " seconds";
     }
 
+#if !GRID_SEARCH_CV
+
     LMCHMM hmm(2);
     {
         Timer tmr;
@@ -136,6 +139,7 @@ int main(int argc, char** argv){
 
         size_t count_ = (observations->size() - 4);
         size_t true_count = 0;
+        size_t true_count_a = 0;
         for (size_t i = 0; i < count_; i++){
             vector<Observation> obs;
             for (size_t j = 0; j <= i; j++){
@@ -150,14 +154,26 @@ int main(int argc, char** argv){
             double real1 = std::sqrt(pow((*m_0)[i].values[0], 2) + pow((*m_0)[i].values[1], 2));
             double real2 = std::sqrt(pow((*m_0)[i].values[2], 2) + pow((*m_0)[i].values[3], 2));
 
+            double est_a = std::sqrt(pow(sample_1.values[0], 2) + pow(sample_1.values[1], 2));
+            double real1_a = std::sqrt(pow((*m_1)[i].values[0], 2) + pow((*m_1)[i].values[1], 2));
+            double real2_a = std::sqrt(pow((*m_1)[i].values[2], 2) + pow((*m_1)[i].values[3], 2));
+
             if (std::abs(est - real1) < 0.1 || std::abs(est - real2) < 0.1){
                 true_count++;
+            }
+
+            if (std::abs(est_a - real1_a) < 0.05 || std::abs(est_a - real2_a) < 0.05){
+                true_count_a++;
             }
 
             LOG(INFO) << setprecision(3) << i << ":\tSample V: " << est;
             LOG(INFO) << setprecision(3) << i << ":\tReal V:   " << real1;
             LOG(INFO) << setprecision(3) << i << ":\tReal V:   " << real2;
-//            LOG(INFO) << setprecision(3) << i << ":\tSample A: " << sample_1.values[0] << "\t" << sample_1.values[1];
+            //            LOG(INFO) << setprecision(3) << i << ":\tSample A: " << sample_1.values[0] << "\t" << sample_1.values[1];
+            LOG(INFO) << "";
+            LOG(INFO) << setprecision(3) << i << ":\tSample a: " << est_a;
+            LOG(INFO) << setprecision(3) << i << ":\tReal a:   " << real1_a;
+            LOG(INFO) << setprecision(3) << i << ":\tReal a:   " << real2_a;
             LOG(INFO) << "";
 
             for (size_t i = 0; i < trees.size(); i++){
@@ -166,7 +182,107 @@ int main(int argc, char** argv){
         }
 
         LOG(INFO) << "Trues: " << true_count << "\tAccuracy: " << (((double)true_count) / count_ * 100) << "%";
+        LOG(INFO) << "Trues a: " << true_count_a << "\tAccuracy a: " << (((double)true_count_a) / count_ * 100) << "%";
     }
+#else
+
+    vector<int> N_values;
+    vector<int> max_iteration_values;
+
+    for (size_t i = 50; i <= 200; i += 50){
+        N_values.push_back(i);
+    }
+
+    for (size_t i = 2; i <= 10; i += 2){
+        max_iteration_values.push_back(i);
+    }
+
+    vector<string> i_and_js;
+    vector<double> accuracies;
+    vector<double> times;
+
+    for (size_t i = 0; i < N_values.size(); i++){
+        for (size_t j = 0; j < max_iteration_values.size(); j++){
+            int N_ = N_values[i];
+            int max_iteration_ = max_iteration_values[j];
+
+            stringstream sst;
+            sst << "N = " << N_ << ", MAX_ITERATION = " << max_iteration_;
+            i_and_js.push_back(sst.str());
+
+            LOG(WARNING) << "Testing " << sst.str();
+
+            LMCHMM hmm(2);
+            {
+                Timer tmr;
+                double t1 = tmr.elapsed();
+
+                hmm.set_limits(pi_low_limits_0, pi_high_limits_0, m_low_limits_0, m_high_limits_0, v_low_limits_0, v_high_limits_0, 0);
+                hmm.set_limits(pi_low_limits_1, pi_high_limits_1, m_low_limits_1, m_high_limits_1, v_low_limits_1, v_high_limits_1, 1);
+
+#if !USE_EM_ONLY
+                hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
+                hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
+#endif
+
+                //hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
+
+                hmm.learn_hmm(observations, max_iteration_, N_);
+
+                double t2 = tmr.elapsed();
+                LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
+                times.push_back(t2 - t1);
+            }
+
+            // Testing
+            {
+                Sampler sampler;
+
+                size_t count_ = (observations->size() - 4);
+                size_t true_count = 0;
+                for (size_t i = 0; i < count_; i++){
+                    vector<Observation> obs;
+                    for (size_t j = 0; j <= i; j++){
+                        obs.push_back((*observations)[j]);
+                    }
+                    vector<DETree *> trees = hmm.forward(&obs, N_);
+
+                    Sample sample_0 = sampler.sample_avg(trees[0], 5);
+                    Sample sample_1 = sampler.sample_avg(trees[1], 5);
+
+                    double est = std::sqrt(pow(sample_0.values[0], 2) + pow(sample_0.values[1], 2));
+                    double real1 = std::sqrt(pow((*m_0)[i].values[0], 2) + pow((*m_0)[i].values[1], 2));
+                    double real2 = std::sqrt(pow((*m_0)[i].values[2], 2) + pow((*m_0)[i].values[3], 2));
+
+                    if (std::abs(est - real1) < 0.1 || std::abs(est - real2) < 0.1){
+                        true_count++;
+                    }
+
+                    LOG(INFO) << setprecision(3) << i << ":\tSample V: " << est;
+                    LOG(INFO) << setprecision(3) << i << ":\tReal V:   " << real1;
+                    LOG(INFO) << setprecision(3) << i << ":\tReal V:   " << real2;
+                    //            LOG(INFO) << setprecision(3) << i << ":\tSample A: " << sample_1.values[0] << "\t" << sample_1.values[1];
+                    LOG(INFO) << "";
+
+                    for (size_t i = 0; i < trees.size(); i++){
+                        delete trees[i];
+                    }
+                }
+
+                LOG(INFO) << "Trues: " << true_count << "\tAccuracy: " << (((double)true_count) / count_ * 100) << "%";
+                accuracies.push_back((((double)true_count) / count_ * 100));
+            }
+        }
+    }
+
+    // Print results from the Grid Search
+    {
+        for (size_t i = 0; i < times.size(); i++){
+            LOG(WARNING) << i_and_js[i] << "\t" << accuracies[i] << "\t" << times[i];
+        }
+    }
+
+#endif
 
     return 0;
 }
@@ -174,8 +290,8 @@ int main(int argc, char** argv){
 double min_v = -0.8;
 double max_v = 0.8;
 
-double min_a = -.1;
-double max_a = .1;
+double min_a = -0.5;
+double max_a = +0.5;
 
 double min_cross = 0;
 double max_cross = 1;
