@@ -8,7 +8,7 @@ using namespace std;
 using namespace google;
 
 LMCHMM::LMCHMM(){
-
+    set_layers(2);
 }
 
 LMCHMM::LMCHMM(int layers_count) : LMCHMM(){
