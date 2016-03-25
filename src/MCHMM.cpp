@@ -236,7 +236,7 @@ void MCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, si
 
     bool cond = true;
     size_t iteration = 0;
-    DETree* old_gamma_tree;
+    DETree* old_gamma_tree = NULL;
 
     while (cond){
         vector<Sample> alpha_samples[2];
@@ -435,13 +435,34 @@ void MCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, si
             }
 
             if (iteration > 1){ // Do the KL if we have at least on previous HMM parameters set!!!
+                // Generate a lot of samples uniformly
                 vector<Sample> test_samples = sampler.uniform_sampling(pi_low_limit, pi_high_limit, 1000);
 
+                // Find the density estimations for each generated sample
                 vector<double> estimates_old;
                 vector<double> estimates_new;
+                double sum_old = 0.0;
+                double sum_new = 0.0;
                 for (size_t r = 0; r < test_samples.size(); r++){
                     estimates_old.push_back(old_gamma_tree->density_value(test_samples[r], 0.5));
                     estimates_new.push_back(gamma_trees.back()->density_value(test_samples[r], 0.5));
+
+                    sum_old += estimates_old.back();
+                    sum_new += estimates_new.back();
+                }
+
+                // Normalize the density values
+                for (size_t r = 0; r < test_samples.size(); r++){
+                    estimates_old[r] = estimates_old[r] / sum_old;
+                    estimates_new[r] = estimates_new[r] / sum_new;
+                }
+
+                // Compute the KL divergence factor
+                double KLD = KLD_compute(estimates_old, estimates_new);
+
+                // If KLD < threshold --> STOP
+                if (KLD < threshold){
+                    cond = false;
                 }
             }
         }
@@ -457,12 +478,34 @@ void MCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, si
         for (size_t i = 0; i < gamma_trees.size() - 1; i++){
             delete gamma_trees[i];
         }
-        delete old_gamma_tree;
+
+        if (old_gamma_tree){
+            delete old_gamma_tree;
+        }
 
         old_gamma_tree = gamma_trees.back();
     }
 
     initialized = true;
+}
+
+/**
+ * @brief MCHMM::KLD_compute computes the Kullback-Leibler divergence of two distributions
+ * @param P The true distribution (in this application, the true is our old distribution)
+ * @param Q The estimated distribution (in this application, the estimated is our new distribution)
+ * @return KLD value
+ */
+double MCHMM::  KLD_compute(vector<double> P, vector<double> Q){
+    double KLD = 0.0;
+    for (size_t i = 0; i < P.size(); i++){
+        KLD += P[i] * std::log(P[i] / Q[i]);
+    }
+    return KLD;
+}
+
+vector<Sample> MCHMM::get_uniform_samples_from_pi(size_t N){
+    Sampler sampler;
+    return sampler.uniform_sampling(pi_low_limit, pi_high_limit, N);
 }
 
 /**

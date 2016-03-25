@@ -59,7 +59,6 @@ double DETree::density_value(Sample sample, double rho){
 }
 
 void DETree::create_tree(const vector<Sample> sample_set, vector<double> *sample_low, vector<double> *sample_high){
-    delete root;
     root = new DETreeNode(sample_set, 0, 'R', *sample_low, *sample_high);
 }
 

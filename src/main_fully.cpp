@@ -20,7 +20,7 @@ using namespace google;
 
 #define N 40
 //#define N_HMM_TEST 100
-#define MAX_ITERATION 3
+#define MAX_ITERATION 100
 //#define TEST_OBS_C 50init_limits_hmm_1
 //#define PI_SAMPLE_C 20
 //#define M_SAMPLE_C 200
@@ -127,7 +127,7 @@ int main(int argc, char** argv){
 
         //hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
 
-        hmm.learn_hmm(observations, MAX_ITERATION, N);
+        hmm.learn_hmm_KL(observations, 0.4, MAX_ITERATION, N);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
@@ -557,7 +557,7 @@ void init_GLOG(){
     InitGoogleLogging(((string)hmm_types[HMM_TYPE]).c_str());
     FLAGS_stderrthreshold = 0;
     FLAGS_log_dir = ".";
-    FLAGS_minloglevel = 0;
+    FLAGS_minloglevel = 1;
     //FLAGS_logtostderr = true;
     //SetLogDestination(google::INFO, "./info");
 }

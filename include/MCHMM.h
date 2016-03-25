@@ -54,6 +54,8 @@ public:
     DETree * forward(vector<Observation> *observations, size_t N);
     DETree * forward_one_step(vector<Observation> *observations, size_t N, DETree * old_alpha); // Not implemented
     vector<DETree *> gamma(vector<Observation> *observations, size_t N);
+    double KLD_compute(vector<double> P, vector<double> Q);
+    vector<Sample> get_uniform_samples_from_pi(size_t N);
 
     double _rho();
     bool initialized_();

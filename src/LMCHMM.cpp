@@ -7,11 +7,10 @@
 using namespace std;
 using namespace google;
 
-LMCHMM::LMCHMM(){
-    set_layers(2);
+LMCHMM::LMCHMM() : LMCHMM(2){
 }
 
-LMCHMM::LMCHMM(int layers_count) : LMCHMM(){
+LMCHMM::LMCHMM(int layers_count){
     set_layers(layers_count);
 }
 
@@ -40,6 +39,86 @@ void LMCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
                 obs = most_probable_seq(observations, i, N);
                 LOG(INFO) << "Got the observation for the next level HMM from HMM in level " << i;
             }
+        }
+    }
+
+    if (!initialized_()){
+        LOG(FATAL) << "Something went wrong in the learning proces!!!";
+    }
+}
+
+void LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N){
+
+    if (layers.size() <= 0){
+        LOG(FATAL) << "No HMM existing in the layers!!!";
+    }
+
+    vector<bool> kl_diverged;
+    for (size_t i = 0; i < layers.size(); i++){
+        kl_diverged.push_back(false);
+    }
+
+    for (size_t j = 0; j < max_iteration; j++){
+        // Get the observations for the first level HMM
+        vector<Observation> obs;
+        for (size_t i = 0; i < observations->size(); i++){
+            obs.push_back((*observations)[i]);
+        }
+
+        // Repeat the HMM learning for each level
+        for (size_t i = 0; i < layers.size(); i++){
+            // Get the test_samples from this layer's MCHMM
+            vector<Sample> test_samples = ((MCHMM*)layers[i])->get_uniform_samples_from_pi(10000);
+            DETree * old_gamma = ((MCHMM*)layers[i])->gamma(observations, N).back();
+
+            // Do an EM for the ith level HMM
+            ((MCHMM*)layers[i])->learn_hmm(&obs, 1, N);
+            ind_initialized[i] = ((MCHMM*)layers[i])->initialized_();
+            LOG(INFO) << "EM Finished for HMM in level " << i;
+
+            DETree * new_gamma = ((MCHMM*)layers[i])->gamma(observations, N).back();
+
+            vector<double> estimates_old;
+            vector<double> estimates_new;
+            double sum_old = 0.0;
+            double sum_new = 0.0;
+            for (size_t r = 0; r < test_samples.size(); r++){
+                estimates_old.push_back(old_gamma->density_value(test_samples[r], 0.5));
+                estimates_new.push_back(new_gamma->density_value(test_samples[r], 0.5));
+
+                sum_old += estimates_old.back();
+                sum_new += estimates_new.back();
+            }
+
+            // Normalize the density values
+            for (size_t r = 0; r < test_samples.size(); r++){
+                estimates_old[r] = estimates_old[r] / sum_old;
+                estimates_new[r] = estimates_new[r] / sum_new;
+            }
+
+            // Compute the KL divergence factor
+            double KLD = ((MCHMM*)layers[i])->KLD_compute(estimates_old, estimates_new);
+            LOG(WARNING) << "Level: " << i << "\t KLD: " << KLD;
+
+            if (KLD < threshold){
+                kl_diverged[i] = true;
+            }
+
+            // Get the most probable sequence of states and use it as the observation for the next state
+            if (i < layers.size() - 1){
+                obs = most_probable_seq(observations, i, N);
+                LOG(INFO) << "Got the observation for the next level HMM from HMM in level " << i;
+            }
+        }
+
+        bool all_converged = true;
+        for (size_t i = 0; i < layers.size(); i++){
+            all_converged = all_converged && kl_diverged[i];
+        }
+
+        if (all_converged){
+            LOG(INFO) << "KL Converged!!!";
+            break;
         }
     }
 
@@ -179,6 +258,8 @@ void LMCHMM::set_layers(size_t layers_count){
         layers.push_back(new MCHMM());
         ind_initialized.push_back(false);
     }
+
+    LOG(INFO) << "LMCHMM with " << layers.size() << " layers created.";
 }
 
 size_t LMCHMM::_layers_count(){
