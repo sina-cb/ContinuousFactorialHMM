@@ -495,15 +495,17 @@ void MCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, si
  * @param Q The estimated distribution (in this application, the estimated is our new distribution)
  * @return KLD value
  */
-double MCHMM::KLD_compute(vector<double> P, vector<double> Q){
+double MCHMM::  KLD_compute(vector<double> P, vector<double> Q){
     double KLD = 0.0;
     for (size_t i = 0; i < P.size(); i++){
         KLD += P[i] * std::log(P[i] / Q[i]);
     }
-
-    LOG(INFO) << "KLD: " << KLD;
-
     return KLD;
+}
+
+vector<Sample> MCHMM::get_uniform_samples_from_pi(size_t N){
+    Sampler sampler;
+    return sampler.uniform_sampling(pi_low_limit, pi_high_limit, N);
 }
 
 /**
