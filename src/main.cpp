@@ -128,8 +128,8 @@ void use_em_learning(){
                 for (size_t j = 0; j < i; j++){
                     obs1->push_back((*observations)[i]);
                 }
-                DETree forward = hmm.forward(obs1, N_HMM_TEST);
-                Sample big_sample = sampler.sample(&forward);
+                DETree * forward = hmm.forward(obs1, N_HMM_TEST);
+                Sample big_sample = sampler.sample(forward);
 
                 if (i < v->size() - 1 && abs(big_sample.values[0] - (*v)[i].values[5]) < 0.3
                         && abs(big_sample.values[1] - (*v)[i].values[6]) < 0.3){
@@ -169,11 +169,11 @@ void use_em_learning(){
         //        obs->push_back((*observations)[observations->size() - 3]);
         //        obs->push_back((*observations)[observations->size() - 2]);
         obs->push_back((*observations)[7]);
-        DETree forward = hmm.forward(obs, N_HMM_TEST);
+        DETree * forward = hmm.forward(obs, N_HMM_TEST);
 
-        Sample big_sample = sampler.sample(&forward);
+        Sample big_sample = sampler.sample(forward);
         for (size_t i = 0; i < 5; i++){
-            Sample temp = sampler.sample(&forward);
+            Sample temp = sampler.sample(forward);
             LOG(INFO) << "Temp " << i << ":\t"
                       << temp.values[0] << "\t"
                       << temp.values[1];
@@ -261,9 +261,9 @@ void use_precollected_samples(){
         //         int tr = 0;
         //        for (size_t i = 1; i < TEST_OBS_C; i++){
         init_observations(obs, -1);
-        DETree forward = hmm.forward(obs, N_HMM_TEST);
+        DETree * forward = hmm.forward(obs, N_HMM_TEST);
 
-        Sample sample = sampler.sample(&forward);
+        Sample sample = sampler.sample(forward);
         LOG(INFO) << "Sample:\t"
                   << sample.values[0] << "\t"
                   << sample.values[1] << "\t"

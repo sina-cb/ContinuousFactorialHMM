@@ -50,12 +50,15 @@ public:
                     );
     void set_distributions(vector<Sample> * pi, vector<Sample> * m, vector<Sample> * v, double rho);
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
-    DETree forward(vector<Observation> *observations, size_t N);
-
-    void init_GLOG();
+    void learn_hmm_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N);
+    DETree * forward(vector<Observation> *observations, size_t N);
+    DETree * forward_one_step(vector<Observation> *observations, size_t N, DETree * old_alpha); // Not implemented
+    vector<DETree *> gamma(vector<Observation> *observations, size_t N);
+    double KLD_compute(vector<double> P, vector<double> Q);
 
     double _rho();
     bool initialized_();
+    DETree* pi_tree_();
 };
 
 #endif

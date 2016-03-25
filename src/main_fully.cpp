@@ -15,7 +15,7 @@ using namespace google;
 
 #define N 100
 #define N_HMM_TEST 100
-#define MAX_ITERATION 30
+#define MAX_ITERATION 200
 #define INIT_OBS_C 100
 #define TEST_OBS_C 50
 #define PI_SAMPLE_C 20
@@ -94,7 +94,7 @@ void use_em_learning(){
         double t1 = tmr.elapsed();
 
         hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
-        hmm.learn_hmm(observations, MAX_ITERATION, N);
+        hmm.learn_hmm_KL(observations, 0.01, MAX_ITERATION, N);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
@@ -111,9 +111,9 @@ void use_em_learning(){
         //         int tr = 0;
         for (size_t i = 1; i < TEST_OBS_C; i++){
             init_observations(obs, i);
-            DETree forward = hmm.forward(obs, N_HMM_TEST);
+            DETree * forward = hmm.forward(obs, N_HMM_TEST);
 
-            Sample sample = sampler.sample(&forward);
+            Sample sample = sampler.sample(forward);
             LOG(INFO) << "Sample: " << sample.values[0];
         }
 
@@ -188,9 +188,9 @@ void use_precollected_samples(){
         //         int tr = 0;
         for (size_t i = 1; i < TEST_OBS_C; i++){
             init_observations(obs, i);
-            DETree forward = hmm.forward(obs, N_HMM_TEST);
+            DETree * forward = hmm.forward(obs, N_HMM_TEST);
 
-            Sample sample = sampler.sample(&forward);
+            Sample sample = sampler.sample(forward);
             LOG(INFO) << "Sample: " << sample.values[0];
         }
 
