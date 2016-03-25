@@ -94,7 +94,7 @@ void use_em_learning(){
         double t1 = tmr.elapsed();
 
         hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
-        hmm.learn_hmm_KL(observations, 0.01, MAX_ITERATION, N);
+        hmm.learn_hmm_KL(observations, 0.08, MAX_ITERATION, N);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
