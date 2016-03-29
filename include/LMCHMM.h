@@ -30,7 +30,7 @@ public:
     void set_layers(size_t layers_count);
 
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
-    void learn_hmm_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N);
+    size_t learn_hmm_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N);
     void learn_hmm_separately(vector<Observation> *observations, size_t max_iteration, int N);
     void learn_hmm_separately_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N); // Not implemented
 

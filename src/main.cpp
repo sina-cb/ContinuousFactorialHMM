@@ -18,15 +18,6 @@ using namespace google;
 
 #define HMM_TYPE 1
 
-#define N 30
-//#define N_HMM_TEST 100
-#define MAX_ITERATION 10
-#define INIT_OBS_C 500
-//#define TEST_OBS_C 50
-//#define PI_SAMPLE_C 20
-//#define M_SAMPLE_C 200
-//#define V_SAMPLE_C 200
-
 #define USE_EM_ONLY 0
 
 vector<string> hmm_types = {"Monte Carlo HMM", "Layered Monte Carlo HMM"};
@@ -38,145 +29,143 @@ void init_limits_hmm_0(vector<double> * pi_low_limits, vector<double> * pi_high_
 void init_limits_hmm_1(vector<double> * pi_low_limits, vector<double> * pi_high_limits,
                        vector<double> * m_low_limits, vector<double> * m_high_limits,
                        vector<double> * v_low_limits, vector<double> * v_high_limits);
-void init_observations(vector<Observation> * obs, size_t size);
-void init_distributions(vector<Observation> * obs, vector<Sample> *vels, vector<Sample> *accs,
+void init_distributions(vector<Observation> * obs,
                         vector<Sample> * pi_0, vector<Sample> * m_0, vector<Sample> * v_0,
                         vector<Sample> * pi_1, vector<Sample> * m_1, vector<Sample> * v_1);
+
+size_t N = 30;
+size_t MAX_ITERATION = 300;
+size_t OBSERVATION_COUNT = 50;
+double THRESHOLD = 0.5;
 
 int main(int argc, char** argv){
     init_GLOG();
     LOG(INFO) << "Using \"" << hmm_types[HMM_TYPE] << "\" algorithm.";
+    LOG(INFO) << "Testing two number generators' domain";
 
-    vector<double> * pi_low_limits_0 = new vector<double>();
-    vector<double> * pi_high_limits_0 = new vector<double>();
-    vector<double> * m_low_limits_0 = new vector<double>();
-    vector<double> * m_high_limits_0 = new vector<double>();
-    vector<double> * v_low_limits_0 = new vector<double>();
-    vector<double> * v_high_limits_0 = new vector<double>();
-
-    {
-        Timer tmr;
-        double t1 = tmr.elapsed();
-
-        init_limits_hmm_0(pi_low_limits_0, pi_high_limits_0, m_low_limits_0,
-                          m_high_limits_0, v_low_limits_0, v_high_limits_0);
-
-        double t2 = tmr.elapsed();
-        LOG(INFO) << "Initializing the HMM_0 limits time: " << (t2 - t1) << " seconds";
+    if (argc == 5){
+        LOG(WARNING) << "Using passed arguments";
+        N = (size_t) atoi(argv[1]);
+        MAX_ITERATION = (size_t) atoi(argv[2]);
+        OBSERVATION_COUNT = (size_t) atoi(argv[3]);
+        THRESHOLD = (double) atof(argv[4]);
+    }else{
+        LOG(WARNING) << "Using default arguments";
     }
 
-    vector<double> * pi_low_limits_1 = new vector<double>();
-    vector<double> * pi_high_limits_1 = new vector<double>();
-    vector<double> * m_low_limits_1 = new vector<double>();
-    vector<double> * m_high_limits_1 = new vector<double>();
-    vector<double> * v_low_limits_1 = new vector<double>();
-    vector<double> * v_high_limits_1 = new vector<double>();
+    for (size_t n = 0; n < 1; n++){
 
-    {
-        Timer tmr;
-        double t1 = tmr.elapsed();
+        vector<double> * pi_low_limits_0 = new vector<double>();
+        vector<double> * pi_high_limits_0 = new vector<double>();
+        vector<double> * m_low_limits_0 = new vector<double>();
+        vector<double> * m_high_limits_0 = new vector<double>();
+        vector<double> * v_low_limits_0 = new vector<double>();
+        vector<double> * v_high_limits_0 = new vector<double>();
 
-        init_limits_hmm_1(pi_low_limits_1, pi_high_limits_1, m_low_limits_1,
-                          m_high_limits_1, v_low_limits_1, v_high_limits_1);
+        {
+            Timer tmr;
+            double t1 = tmr.elapsed();
 
-        double t2 = tmr.elapsed();
-        LOG(INFO) << "Initializing the HMM_1 limits time: " << (t2 - t1) << " seconds";
-    }
+            init_limits_hmm_0(pi_low_limits_0, pi_high_limits_0, m_low_limits_0,
+                              m_high_limits_0, v_low_limits_0, v_high_limits_0);
 
-    vector<Observation> *observations = new vector<Observation>();
-    {
-        Timer tmr;
-        double t1 = tmr.elapsed();
+            double t2 = tmr.elapsed();
+            LOG(INFO) << "Initializing the HMM_0 limits time: " << (t2 - t1) << " seconds";
+        }
 
-        init_observations(observations, INIT_OBS_C);
+        vector<double> * pi_low_limits_1 = new vector<double>();
+        vector<double> * pi_high_limits_1 = new vector<double>();
+        vector<double> * m_low_limits_1 = new vector<double>();
+        vector<double> * m_high_limits_1 = new vector<double>();
+        vector<double> * v_low_limits_1 = new vector<double>();
+        vector<double> * v_high_limits_1 = new vector<double>();
 
-        double t2 = tmr.elapsed();
-        LOG(INFO) << "Initializing the observations time: " << (t2 - t1) << " seconds";
-    }
+        {
+            Timer tmr;
+            double t1 = tmr.elapsed();
 
-    vector<Sample> * pi_0 = new vector<Sample>();
-    vector<Sample> *  m_0 = new vector<Sample>();
-    vector<Sample> *  v_0 = new vector<Sample>();
+            init_limits_hmm_1(pi_low_limits_1, pi_high_limits_1, m_low_limits_1,
+                              m_high_limits_1, v_low_limits_1, v_high_limits_1);
 
-    vector<Sample> * pi_1 = new vector<Sample>();
-    vector<Sample> *  m_1 = new vector<Sample>();
-    vector<Sample> *  v_1 = new vector<Sample>();
+            double t2 = tmr.elapsed();
+            LOG(INFO) << "Initializing the HMM_1 limits time: " << (t2 - t1) << " seconds";
+        }
 
-    vector<Sample> * vels = new vector<Sample>();
-    vector<Sample> * accs = new vector<Sample>();
-    {
-        Timer tmr;
-        double t1 = tmr.elapsed();
+        vector<Observation> *observations = new vector<Observation>();
+        vector<Sample> * pi_0 = new vector<Sample>();
+        vector<Sample> *  m_0 = new vector<Sample>();
+        vector<Sample> *  v_0 = new vector<Sample>();
 
-        init_distributions(observations, vels, accs, pi_0, m_0, v_0, pi_1, m_1, v_1);
+        vector<Sample> * pi_1 = new vector<Sample>();
+        vector<Sample> *  m_1 = new vector<Sample>();
+        vector<Sample> *  v_1 = new vector<Sample>();
 
-        double t2 = tmr.elapsed();
-        LOG(INFO) << "Initializing the distributions time: " << (t2 - t1) << " seconds";
-    }
+        {
+            Timer tmr;
+            double t1 = tmr.elapsed();
 
-    LMCHMM hmm(2);
-    {
-        Timer tmr;
-        double t1 = tmr.elapsed();
+            init_distributions(observations, pi_0, m_0, v_0, pi_1, m_1, v_1);
 
-        hmm.set_limits(pi_low_limits_0, pi_high_limits_0, m_low_limits_0, m_high_limits_0, v_low_limits_0, v_high_limits_0, 0);
-        hmm.set_limits(pi_low_limits_1, pi_high_limits_1, m_low_limits_1, m_high_limits_1, v_low_limits_1, v_high_limits_1, 1);
+            double t2 = tmr.elapsed();
+            LOG(INFO) << "Initializing the distributions time: " << (t2 - t1) << " seconds";
+        }
+
+        LMCHMM hmm(2);
+        {
+            Timer tmr;
+            double t1 = tmr.elapsed();
+
+            hmm.set_limits(pi_low_limits_0, pi_high_limits_0, m_low_limits_0, m_high_limits_0, v_low_limits_0, v_high_limits_0, 0);
+            hmm.set_limits(pi_low_limits_1, pi_high_limits_1, m_low_limits_1, m_high_limits_1, v_low_limits_1, v_high_limits_1, 1);
 
 #if !USE_EM_ONLY
-        hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
-        hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
+            hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
+            hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
 #endif
 
-        hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
+            //hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
 
-        //hmm.learn_hmm(observations, MAX_ITERATION, N);
+            size_t converged_at = hmm.learn_hmm_KL(observations, THRESHOLD, MAX_ITERATION, N);
 
-        double t2 = tmr.elapsed();
-        LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
+            double t2 = tmr.elapsed();
+            LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
+            LOG(INFO) << "Converged at iteration: " << converged_at;
+        }
     }
 
     // Testing
-    {
-        Sampler sampler;
-        int true_vel = 0;
+    //    {
+    //        Sampler sampler;
+    //        int true_vel = 0;
 
-        size_t count_ = (observations->size() - 4) / 2;
-        double vel_acc = 0.1;
-        for (size_t i = 0; i < count_; i++){
-            vector<Observation> obs;
-            for (size_t j = 0; j <= i; j++){
-                obs.push_back((*observations)[j]);
-            }
-            vector<DETree *> trees = hmm.forward(&obs, N);
+    //        size_t count_ = (observations->size() - 4) / 2;
+    //        double vel_acc = 0.1;
+    //        for (size_t i = 0; i < count_; i++){
+    //            vector<Observation> obs;
+    //            for (size_t j = 0; j <= i; j++){
+    //                obs.push_back((*observations)[j]);
+    //            }
+    //            vector<DETree *> trees = hmm.forward(&obs, N);
 
-            Sample sample_0 = sampler.sample_avg(trees[0], 5);
-            Sample sample_1 = sampler.sample_avg(trees[1], 5);
+    //            Sample sample_0 = sampler.sample_avg(trees[0], 5);
+    //            Sample sample_1 = sampler.sample_avg(trees[1], 5);
 
-            LOG(INFO) << i << ":\tSample V: " << sample_0.values[0] << "\tSample A: " << sample_1.values[0];
+    //            LOG(INFO) << i << ":\tSample V: " << sample_0.values[0] << "\tSample A: " << sample_1.values[0];
 
-            if (std::abs(sample_0.values[0] - (*vels)[i].values[0]) < vel_acc){
-                true_vel++;
-            }
+    //            if (std::abs(sample_0.values[0] - (*vels)[i].values[0]) < vel_acc){
+    //                true_vel++;
+    //            }
 
-            for (size_t i = 0; i < trees.size(); i++){
-                delete trees[i];
-            }
-        }
+    //            for (size_t i = 0; i < trees.size(); i++){
+    //                delete trees[i];
+    //            }
+    //        }
 
-        LOG(INFO) << "Trues: " << true_vel << "\tAccuracy: " << (((double)true_vel) / count_ * 100) << "%";
-    }
+    //        LOG(INFO) << "Trues: " << true_vel << "\tAccuracy: " << (((double)true_vel) / count_ * 100) << "%";
+    //    }
 
     return 0;
 }
-
-double min_x = 0;
-double max_x = 100;
-
-double min_v = -0.4;
-double max_v = 0.4;
-
-double min_a = -.1;
-double max_a = .1;
 
 void init_limits_hmm_0(vector<double> *pi_low_limits, vector<double> *pi_high_limits,
                        vector<double> *m_low_limits, vector<double> *m_high_limits,
@@ -188,21 +177,27 @@ void init_limits_hmm_0(vector<double> *pi_low_limits, vector<double> *pi_high_li
         LOG(FATAL) << "One of the limit vectors is NULL!";
     }
 
-    pi_low_limits->push_back(min_v);
+    double min_s = 0;
+    double max_s = 1;
 
-    pi_high_limits->push_back(max_v);
+    double min_o = 6;
+    double max_o = 14;
 
-    m_low_limits->push_back(min_v);
-    m_low_limits->push_back(min_v);
+    pi_low_limits->push_back(min_s);
 
-    m_high_limits->push_back(max_v);
-    m_high_limits->push_back(max_v);
+    pi_high_limits->push_back(max_s);
 
-    v_low_limits->push_back(min_x);
-    v_low_limits->push_back(min_v);
+    m_low_limits->push_back(min_s);
+    m_low_limits->push_back(min_s);
 
-    v_high_limits->push_back(max_x);
-    v_high_limits->push_back(max_v);
+    m_high_limits->push_back(max_s);
+    m_high_limits->push_back(max_s);
+
+    v_low_limits->push_back(min_o);
+    v_low_limits->push_back(min_s);
+
+    v_high_limits->push_back(max_o);
+    v_high_limits->push_back(max_s);
 }
 
 void init_limits_hmm_1(vector<double> *pi_low_limits, vector<double> *pi_high_limits,
@@ -215,136 +210,169 @@ void init_limits_hmm_1(vector<double> *pi_low_limits, vector<double> *pi_high_li
         LOG(FATAL) << "One of the limit vectors is NULL!";
     }
 
-    pi_low_limits->push_back(min_a);
+    double min_s = 0;
+    double max_s = 1;
 
-    pi_high_limits->push_back(max_a);
+    double min_o = 0;
+    double max_o = 1;
 
-    m_low_limits->push_back(min_a);
-    m_low_limits->push_back(min_a);
+    pi_low_limits->push_back(min_s);
 
-    m_high_limits->push_back(max_a);
-    m_high_limits->push_back(max_a);
+    pi_high_limits->push_back(max_s);
 
-    v_low_limits->push_back(min_v);
-    v_low_limits->push_back(min_a);
+    m_low_limits->push_back(min_s);
+    m_low_limits->push_back(min_s);
 
-    v_high_limits->push_back(max_v);
-    v_high_limits->push_back(max_a);
+    m_high_limits->push_back(max_s);
+    m_high_limits->push_back(max_s);
+
+    v_low_limits->push_back(min_o);
+    v_low_limits->push_back(min_s);
+
+    v_high_limits->push_back(max_o);
+    v_high_limits->push_back(max_s);
 }
 
-void init_observations(vector<Observation> *obs, size_t size){
-
-    if (!obs){
-        LOG(FATAL) << "Observation vector was NULL!";
-    }
-
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine gen(seed);
-    uniform_real_distribution<double> dist(-.05, .05);
-    Observation temp;
-    temp.values.push_back(0.0);
-    obs->push_back(temp);
-    double dt = 1.0;
-    double v = 0.0;
-    double a = 0.1;
-    for (size_t i = 0; i < size / 2; i++){
-        Observation temp1;
-
-        if (v > max_v){
-            v = max_v;
-            a = 0;
-        }
-
-        double new_x = obs->back().values[0] + v * dt + dist(gen);
-        temp1.values.push_back(new_x);
-        v += (a * dt) + dist(gen);
-        a = 0.1;
-
-        obs->push_back(temp1);
-    }
-
-    for (size_t i = 0; i < size - (size / 2) - 1; i++){
-        Observation temp1;
-        if (v < 0.0){
-            v = 0.0;
-            a = 0.0;
-        }
-
-        double new_x = obs->back().values[0] + v * dt + dist(gen);
-        temp1.values.push_back(new_x);
-        v += (a * dt) + dist(gen);
-        a = -0.2;
-
-        obs->push_back(temp1);
-    }
-}
-
-void init_distributions(vector<Observation> *obs, vector<Sample> *vels, vector<Sample> *accs,
+void init_distributions(vector<Observation> *obs,
                         vector<Sample> *pi_0, vector<Sample> *m_0, vector<Sample> *v_0,
                         vector<Sample> *pi_1, vector<Sample> *m_1, vector<Sample> *v_1){
 
-    LOG(INFO) << "Let's initialize the distributions based on the observation and physic laws!";
-    LOG(INFO) << "I assume that time steps == 1s";
+    double min_s_0 = 0;
+    double max_s_0 = 1;
+    double min_s_1 = 0;
+    double max_s_1 = 1;
 
-    for (size_t i = 0; i < obs->size() - 1; i++){
-        Sample vel;
-        vel.values.push_back((*obs)[i + 1].values[0] - (*obs)[i].values[0]);
-        vel.p = 1.0 / (obs->size() - 1);
-        vels->push_back(vel);
+    // Initializing the PI distributions
+    for (size_t i = 0; i < 100; i++){
+        Sample _0;
+        _0.values.push_back(min_s_0);
+        _0.p = 1.0 / 100;
+        pi_0->push_back(_0);
+
+        Sample _1;
+        _1.values.push_back(min_s_1);
+        _1.p = 1.0 / 100;
+        pi_1->push_back(_1);
     }
 
-    for (size_t i = 0; i < vels->size() - 1; i++){
-        Sample acc;
-        acc.values.push_back((*vels)[i + 1].values[0] - (*vels)[i].values[0]);
-        acc.p = 1.0 / (vels->size() - 1);
-        accs->push_back(acc);
+    // Generate observations and the states generating them
+    double current_s_0 = 0;
+    double current_s_1 = 0;
+    for (size_t i = 0; i < OBSERVATION_COUNT; i++){
+
+        double old_state_0 = current_s_0;
+        double old_state_1 = current_s_1;
+
+        if (current_s_1 == min_s_1){
+            // determine the new state of the upper number generator
+            double tice = drand48() * 100;
+            if (tice < 20){
+                current_s_1 = max_s_1;
+            }else{
+                current_s_1 = current_s_1;
+            }
+        }else{ // if (current_s_1 == max_s_1){
+            // determine the new state of the upper number generator
+            double tice = drand48() * 100;
+            if (tice < 20){
+                current_s_1 = min_s_1;
+            }else{
+                current_s_1 = current_s_1;
+            }
+        }
+
+        // Now based on the new state, determine the lower level state
+        double tice = drand48() * 100;
+        if (current_s_1 == min_s_1 && tice < 0.2){
+            current_s_0 = min_s_0;
+        }else if (current_s_1 == min_s_1 && tice>= 0.2){
+            current_s_0 = max_s_0;
+        }else if (current_s_1 == max_s_1 && tice < 0.2){
+            current_s_0 = max_s_0;
+        }else if (current_s_1 == max_s_1 && tice >= 0.2){
+            current_s_0 = min_s_0;
+        }
+
+        // Now current state_0 and state_1 are initialized
+        // Let's make some observations
+        double num_1 = 0;
+        double num_2 = 0;
+        if (current_s_1 == min_s_1 && current_s_0 == min_s_0){
+            double rand = (drand48() * 0.2) - 0.1;
+            num_1 = 1 + rand;
+
+            rand = (drand48() * 0.2) - 0.1;
+            num_2 = 6 + rand;
+        }else if (current_s_1 == min_s_1 && current_s_0 == max_s_0){
+            double rand = (drand48() * 0.2) - 0.1;
+            num_1 = 3 + rand;
+
+            rand = (drand48() * 0.2) - 0.1;
+            num_2 = 6 + rand;
+        }else if (current_s_1 == max_s_1 && current_s_0 == min_s_0){
+            double rand = (drand48() * 0.2) - 0.1;
+            num_1 = 1 + rand;
+
+            rand = (drand48() * 0.2) - 0.1;
+            num_2 = 10 + rand;
+        }else if (current_s_1 == max_s_1 && current_s_0 == max_s_0){
+            double rand = (drand48() * 0.2) - 0.1;
+            num_1 = 3 + rand;
+
+            rand = (drand48() * 0.2) - 0.1;
+            num_2 = 10 + rand;
+        }
+
+        Observation obs_s;
+        obs_s.values.push_back(num_1 + num_2);
+
+        Sample m_1_s;
+        m_1_s.values.push_back(old_state_0);
+        m_1_s.values.push_back(current_s_0);
+        m_1_s.p = 1.0 / OBSERVATION_COUNT;
+
+        Sample m_2_s;
+        m_2_s.values.push_back(old_state_1);
+        m_2_s.values.push_back(current_s_1);
+        m_2_s.p = 1.0 / OBSERVATION_COUNT;
+
+        Sample v_1_s;
+        v_1_s.values.push_back(num_1 + num_2);
+        v_1_s.values.push_back(current_s_0);
+        v_1_s.p = 1.0 / OBSERVATION_COUNT;
+
+        Sample v_2_s;
+        v_2_s.values.push_back(current_s_0);
+        v_2_s.values.push_back(current_s_1);
+        v_2_s.p = 1.0 / OBSERVATION_COUNT;
+
+        // Add the samples to the distribution
+        obs->push_back(obs_s);
+
+        m_0->push_back(m_1_s);
+        m_1->push_back(m_2_s);
+
+        v_0->push_back(v_1_s);
+        v_1->push_back(v_2_s);
     }
 
-    for (size_t i = 0; i < 20; i++){
-        Sample vel;
-        vel.values.push_back((*vels)[0].values[0]);
-        pi_0->push_back((*vels)[0]);
-        pi_1->push_back((*accs)[0]);
-    }
+    //    LOG(INFO) << "Sizes:";
+    //    LOG(INFO) << "\n"
+    //              << "\tObs:  " << obs->size() << "\n"
+    //              << "\tPI_0: " << pi_0->size() << "\n"
+    //              << "\tM_0:  " << m_0->size() << "\n"
+    //              << "\tV_0:  " << v_0->size() << "\n"
+    //              << "\tPI_1: " << pi_1->size() << "\n"
+    //              << "\tM_1:  " << m_1->size() << "\n"
+    //              << "\tV_1:  " << v_1->size() << "\n";
 
-    for (size_t i = 0; i < vels->size() - 1; i++){
-        Sample m_s;
-        m_s.values.push_back((*vels)[i + 1].values[0]);
-        m_s.values.push_back((*vels)[i].values[0]);
-        m_s.p = 1.0 / ((*vels).size() - 1);
-        m_0->push_back(m_s);
-    }
-
-    for (size_t i = 0; i < vels->size(); i++){
-        Sample v_s;
-        v_s.values.push_back((*obs)[i + 1].values[0]);
-        v_s.values.push_back((*vels)[i].values[0]);
-        v_s.p = 1.0 / ((*vels).size());
-        v_0->push_back(v_s);
-    }
-
-    for (size_t i = 0; i < accs->size() - 1; i++){
-        Sample m_s;
-        m_s.values.push_back((*accs)[i + 1].values[0]);
-        m_s.values.push_back((*accs)[i].values[0]);
-        m_s.p = 1.0 / ((*accs).size() - 1);
-        m_1->push_back(m_s);
-    }
-
-    for (size_t i = 0; i < accs->size(); i++){
-        Sample v_s;
-        v_s.values.push_back((*vels)[i + 1].values[0]);
-        v_s.values.push_back((*accs)[i].values[0]);
-        v_s.p = 1.0 / (accs->size());
-        v_1->push_back(v_s);
-    }
 }
 
 void init_GLOG(){
     InitGoogleLogging(((string)hmm_types[HMM_TYPE]).c_str());
     FLAGS_stderrthreshold = 0;
     FLAGS_log_dir = ".";
-    FLAGS_minloglevel = 0;
+    FLAGS_minloglevel = 1;
     //FLAGS_logtostderr = true;
     //SetLogDestination(google::INFO, "./info");
 }
