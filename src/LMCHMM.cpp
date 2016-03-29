@@ -49,6 +49,10 @@ void LMCHMM::learn_hmm(vector<Observation> *observations, size_t max_iteration, 
 
 size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N){
 
+    LOG(WARNING) << "HEADER";
+    LOG(WARNING) << "Iteration\tKLD_0\tKLD_1";
+
+
     if (layers.size() <= 0){
         LOG(FATAL) << "No HMM existing in the layers!!!";
     }
@@ -73,6 +77,7 @@ size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold,
         }
 
         // Repeat the HMM learning for each level
+        vector<double> KLDs;
         for (size_t i = 0; i < layers.size(); i++){
             // Get the test_samples from this layer's MCHMM
             DETree * old_gamma = ((MCHMM*)layers[i])->gamma(observations, N).back();
@@ -105,6 +110,7 @@ size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold,
             // Compute the KL divergence factor
             double KLD = ((MCHMM*)layers[i])->KLD_compute(estimates_old, estimates_new);
             LOG(INFO) << "Level: " << i << "\t KLD: " << KLD;
+            KLDs.push_back(KLD);
 
             if (KLD < threshold){
                 kl_diverged[i] = true;
@@ -117,6 +123,13 @@ size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold,
             }
         }
 
+        stringstream ssd;
+        ssd << j << "\t";
+        for (size_t g = 0; g < KLDs.size(); g++){
+            ssd << KLDs[g] << "\t";
+        }
+        LOG(WARNING) << ssd.str();
+
         bool all_converged = true;
         for (size_t i = 0; i < layers.size(); i++){
             all_converged = all_converged && kl_diverged[i];
@@ -126,7 +139,7 @@ size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold,
             LOG(WARNING) << "Iteration: " << j << "\tKL Converged!!!";
             break;
         }else{
-            LOG(WARNING) << "Iteration: " << j << "\tKL Not Converged. Reseting States!!!";
+            LOG(INFO) << "Iteration: " << j << "\tKL Not Converged. Reseting States!!!";
             for (size_t i = 0; i < layers.size(); i++){
                 kl_diverged[i] = false;
             }

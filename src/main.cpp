@@ -37,23 +37,31 @@ size_t N = 30;
 size_t MAX_ITERATION = 300;
 size_t OBSERVATION_COUNT = 50;
 double THRESHOLD = 0.5;
+string run_number = "";
+size_t number_of_runs = 1;
 
 int main(int argc, char** argv){
     init_GLOG();
     LOG(INFO) << "Using \"" << hmm_types[HMM_TYPE] << "\" algorithm.";
     LOG(INFO) << "Testing two number generators' domain";
 
-    if (argc == 5){
+    if (argc == 7){
         LOG(WARNING) << "Using passed arguments";
         N = (size_t) atoi(argv[1]);
         MAX_ITERATION = (size_t) atoi(argv[2]);
         OBSERVATION_COUNT = (size_t) atoi(argv[3]);
         THRESHOLD = (double) atof(argv[4]);
+        run_number = argv[5];
+        number_of_runs = (size_t) atoi(argv[6]);
+
     }else{
         LOG(WARNING) << "Using default arguments";
-    }
+        LOG(WARNING) << "\n\tIf you want to use the arguments, you should pass the following parameters:\n"
+                        "\t\tN(size_t) MAX_ITERATION(size_t) OBSERVATION_COUNT(size_t) THRESHOLD(double) run_number(String) "
+                        "number_of_runs(size_t)\n\n";
+     }
 
-    for (size_t n = 0; n < 1; n++){
+    for (size_t n = 0; n < number_of_runs; n++){
 
         vector<double> * pi_low_limits_0 = new vector<double>();
         vector<double> * pi_high_limits_0 = new vector<double>();
@@ -128,7 +136,7 @@ int main(int argc, char** argv){
             size_t converged_at = hmm.learn_hmm_KL(observations, THRESHOLD, MAX_ITERATION, N);
 
             double t2 = tmr.elapsed();
-            LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
+            LOG(WARNING) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
             LOG(INFO) << "Converged at iteration: " << converged_at;
         }
     }
