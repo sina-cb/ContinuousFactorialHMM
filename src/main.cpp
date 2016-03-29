@@ -54,11 +54,21 @@ int main(int argc, char** argv){
         run_number = argv[5];
         number_of_runs = (size_t) atoi(argv[6]);
 
+        stringstream ssd;
+        ssd << "N: " << N << "\tMAX_ITERATION: " << MAX_ITERATION << "\tOBSERVATION_COUNT: " << OBSERVATION_COUNT
+            << "\tTHRESHOLD: " << THRESHOLD << "\trun_number: " << run_number << "\tnumber_of_runs: " << number_of_runs;
+        LOG(WARNING) << ssd.str();
+
     }else{
         LOG(WARNING) << "Using default arguments";
         LOG(WARNING) << "\n\tIf you want to use the arguments, you should pass the following parameters:\n"
                         "\t\tN(size_t) MAX_ITERATION(size_t) OBSERVATION_COUNT(size_t) THRESHOLD(double) run_number(String) "
                         "number_of_runs(size_t)\n\n";
+
+        stringstream ssd;
+        ssd << "N: " << N << "\tMAX_ITERATION: " << MAX_ITERATION << "\tOBSERVATION_COUNT: " << OBSERVATION_COUNT
+            << "\tTHRESHOLD: " << THRESHOLD << "\trun_number: " << run_number << "\tnumber_of_runs: " << number_of_runs;
+        LOG(WARNING) << ssd.str();
      }
 
     for (size_t n = 0; n < number_of_runs; n++){
