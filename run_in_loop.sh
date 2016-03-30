@@ -2,7 +2,7 @@
 ###### CONFIG 1 ####################################################################
 ####################################################################################
 N=50
-MAX_ITERATION=120
+MAX_ITERATION=100
 OBSERVATION_COUNT=50
 THRESHOLD=0.4
 RUN_NUMBER=1
@@ -28,7 +28,7 @@ mv "Monte-Carlo-HMM"*"WARNING"* $FOLDER_NAME
 ###### CONFIG 2 ####################################################################
 ####################################################################################
 N=50
-MAX_ITERATION=120
+MAX_ITERATION=100
 OBSERVATION_COUNT=100
 THRESHOLD=0.4
 RUN_NUMBER=1
@@ -54,7 +54,7 @@ mv "Monte-Carlo-HMM"*"WARNING"* $FOLDER_NAME
 ###### CONFIG 3 ####################################################################
 ####################################################################################
 N=50
-MAX_ITERATION=120
+MAX_ITERATION=100
 OBSERVATION_COUNT=150
 THRESHOLD=0.4
 RUN_NUMBER=1
@@ -80,8 +80,8 @@ mv "Monte-Carlo-HMM"*"WARNING"* $FOLDER_NAME
 ###### CONFIG 4 ####################################################################
 ####################################################################################
 N=50
-MAX_ITERATION=1000
-OBSERVATION_COUNT=120
+MAX_ITERATION=100
+OBSERVATION_COUNT=200
 THRESHOLD=0.4
 RUN_NUMBER=1
 NUMBER_OF_RUNS=1
