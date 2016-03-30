@@ -1,8 +1,0 @@
-Log file created at: 2016/03/30 16:42:16
-Running on machine: studioone
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-W0330 16:42:16.774552 22611 main.cpp:49] Using passed arguments
-W0330 16:42:18.861325 22611 main.cpp:60] N: 50	MAX_ITERATION: 1000	OBSERVATION_COUNT: 100	THRESHOLD: 0.4	run_number: 89	number_of_runs: 1
-W0330 16:42:18.909566 22611 LMCHMM.cpp:52] HEADER
-W0330 16:42:18.909624 22611 LMCHMM.cpp:53] Iteration	KLD_0	KLD_1
-W0330 16:42:22.830986 22611 LMCHMM.cpp:131] 0	0.758943	3.82564	
