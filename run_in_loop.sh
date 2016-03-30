@@ -2,13 +2,13 @@
 ###### CONFIG 1 ####################################################################
 ####################################################################################
 N=50
-MAX_ITERATION=1000
+MAX_ITERATION=120
 OBSERVATION_COUNT=50
 THRESHOLD=0.4
 RUN_NUMBER=1
 NUMBER_OF_RUNS=1
 
-while test "$RUN_NUMBER" -lt "100"; do
+while test "$RUN_NUMBER" -lt "20"; do
 	./build/Monte-Carlo-HMM $N $MAX_ITERATION $OBSERVATION_COUNT $THRESHOLD $RUN_NUMBER $NUMBER_OF_RUNS
 	let "RUN_NUMBER = RUN_NUMBER + 1"
 done
@@ -27,13 +27,14 @@ mv "Monte-Carlo-HMM"*"WARNING"* $FOLDER_NAME
 ####################################################################################
 ###### CONFIG 2 ####################################################################
 ####################################################################################
-MAX_ITERATION=1000
+N=50
+MAX_ITERATION=120
 OBSERVATION_COUNT=100
 THRESHOLD=0.4
 RUN_NUMBER=1
 NUMBER_OF_RUNS=1
 
-while test "$RUN_NUMBER" -lt "100"; do
+while test "$RUN_NUMBER" -lt "20"; do
 	./build/Monte-Carlo-HMM $N $MAX_ITERATION $OBSERVATION_COUNT $THRESHOLD $RUN_NUMBER $NUMBER_OF_RUNS
 	let "RUN_NUMBER = RUN_NUMBER + 1"
 done
@@ -52,13 +53,14 @@ mv "Monte-Carlo-HMM"*"WARNING"* $FOLDER_NAME
 ####################################################################################
 ###### CONFIG 3 ####################################################################
 ####################################################################################
-MAX_ITERATION=1000
+N=50
+MAX_ITERATION=120
 OBSERVATION_COUNT=150
 THRESHOLD=0.4
 RUN_NUMBER=1
 NUMBER_OF_RUNS=1
 
-while test "$RUN_NUMBER" -lt "100"; do
+while test "$RUN_NUMBER" -lt "20"; do
 	./build/Monte-Carlo-HMM $N $MAX_ITERATION $OBSERVATION_COUNT $THRESHOLD $RUN_NUMBER $NUMBER_OF_RUNS
 	let "RUN_NUMBER = RUN_NUMBER + 1"
 done
@@ -77,13 +79,14 @@ mv "Monte-Carlo-HMM"*"WARNING"* $FOLDER_NAME
 ####################################################################################
 ###### CONFIG 4 ####################################################################
 ####################################################################################
+N=50
 MAX_ITERATION=1000
-OBSERVATION_COUNT=200
+OBSERVATION_COUNT=120
 THRESHOLD=0.4
 RUN_NUMBER=1
 NUMBER_OF_RUNS=1
 
-while test "$RUN_NUMBER" -lt "100"; do
+while test "$RUN_NUMBER" -lt "20"; do
 	./build/Monte-Carlo-HMM $N $MAX_ITERATION $OBSERVATION_COUNT $THRESHOLD $RUN_NUMBER $NUMBER_OF_RUNS
 	let "RUN_NUMBER = RUN_NUMBER + 1"
 done
