@@ -195,27 +195,53 @@ void init_limits_hmm_0(vector<double> *pi_low_limits, vector<double> *pi_high_li
         LOG(FATAL) << "One of the limit vectors is NULL!";
     }
 
-    double min_s = 0;
-    double max_s = 1;
+    double vel_min = -0.5;
 
-    double min_o = 6;
-    double max_o = 14;
+    double vel_max = 0.5;
 
-    pi_low_limits->push_back(min_s);
+    double crosswalk_min = 0;
+    double crosswalk_max = 3;
 
-    pi_high_limits->push_back(max_s);
+    double junction_min = 0;
+    double junction_max = 3;
 
-    m_low_limits->push_back(min_s);
-    m_low_limits->push_back(min_s);
+    double wall_min = 0;
+    double wall_max = 3.0;
 
-    m_high_limits->push_back(max_s);
-    m_high_limits->push_back(max_s);
+    ////////// INIT PI BOUNDS //////////
+    pi_low_limits->push_back(vel_min);
+    pi_low_limits->push_back(vel_min);
 
-    v_low_limits->push_back(min_o);
-    v_low_limits->push_back(min_s);
+    pi_high_limits->push_back(vel_max);
+    pi_high_limits->push_back(vel_max);
 
-    v_high_limits->push_back(max_o);
-    v_high_limits->push_back(max_s);
+
+    ////////// INIT M  BOUNDS //////////
+    m_low_limits->push_back(vel_min);
+    m_low_limits->push_back(vel_min);
+    m_low_limits->push_back(vel_min);
+    m_low_limits->push_back(vel_min);
+
+    m_high_limits->push_back(vel_max);
+    m_high_limits->push_back(vel_max);
+    m_high_limits->push_back(vel_max);
+    m_high_limits->push_back(vel_max);
+
+
+    ////////// INIT V  BOUNDS //////////
+    v_low_limits->push_back(crosswalk_min);
+    v_low_limits->push_back(junction_min);
+    v_low_limits->push_back(wall_min);
+    v_low_limits->push_back(wall_min);
+    v_low_limits->push_back(vel_min);
+    v_low_limits->push_back(vel_min);
+
+    v_high_limits->push_back(crosswalk_max);
+    v_high_limits->push_back(junction_max);
+    v_high_limits->push_back(wall_max);
+    v_high_limits->push_back(wall_max);
+    v_high_limits->push_back(vel_max);
+    v_high_limits->push_back(vel_max);
 }
 
 void init_limits_hmm_1(vector<double> *pi_low_limits, vector<double> *pi_high_limits,
@@ -228,161 +254,243 @@ void init_limits_hmm_1(vector<double> *pi_low_limits, vector<double> *pi_high_li
         LOG(FATAL) << "One of the limit vectors is NULL!";
     }
 
-    double min_s = 0;
-    double max_s = 1;
+    double accl_min = -0.2;
+    double accl_max = 0.2;
 
-    double min_o = 0;
-    double max_o = 1;
+    double vel_min = -0.5;
+    double vel_max = 0.5;
 
-    pi_low_limits->push_back(min_s);
+    ////////// INIT PI BOUNDS //////////
+    pi_low_limits->push_back(accl_min);
+    pi_low_limits->push_back(accl_min);
 
-    pi_high_limits->push_back(max_s);
+    pi_high_limits->push_back(accl_max);
+    pi_high_limits->push_back(accl_max);
 
-    m_low_limits->push_back(min_s);
-    m_low_limits->push_back(min_s);
 
-    m_high_limits->push_back(max_s);
-    m_high_limits->push_back(max_s);
+    ////////// INIT M  BOUNDS //////////
+    m_low_limits->push_back(accl_min);
+    m_low_limits->push_back(accl_min);
+    m_low_limits->push_back(accl_min);
+    m_low_limits->push_back(accl_min);
 
-    v_low_limits->push_back(min_o);
-    v_low_limits->push_back(min_s);
+    m_high_limits->push_back(accl_max);
+    m_high_limits->push_back(accl_max);
+    m_high_limits->push_back(accl_max);
+    m_high_limits->push_back(accl_max);
 
-    v_high_limits->push_back(max_o);
-    v_high_limits->push_back(max_s);
+
+    ////////// INIT V  BOUNDS //////////
+    v_low_limits->push_back(vel_min);
+    v_low_limits->push_back(vel_min);
+    v_low_limits->push_back(accl_min);
+    v_low_limits->push_back(accl_min);
+
+    v_high_limits->push_back(vel_max);
+    v_high_limits->push_back(vel_max);
+    v_high_limits->push_back(accl_max);
+    v_high_limits->push_back(accl_max);
 }
 
 void init_distributions(vector<Observation> *obs,
                         vector<Sample> *pi_0, vector<Sample> *m_0, vector<Sample> *v_0,
                         vector<Sample> *pi_1, vector<Sample> *m_1, vector<Sample> *v_1){
 
-    double min_s_0 = 0;
-    double max_s_0 = 1;
-    double min_s_1 = 0;
-    double max_s_1 = 1;
-
-    // Initializing the PI distributions
-    for (size_t i = 0; i < 100; i++){
-        Sample _0;
-        _0.values.push_back(min_s_0);
-        _0.p = 1.0 / 100;
-        pi_0->push_back(_0);
-
-        Sample _1;
-        _1.values.push_back(min_s_1);
-        _1.p = 1.0 / 100;
-        pi_1->push_back(_1);
+    //////////////////////////////////////////////////////////
+    //////////////////////P_0/////////////////////////////////
+    //////////////////////////////////////////////////////////
+    if (!pi_0){
+        LOG(FATAL) << "PI 0 vector was not initialized!";
     }
 
-    // Generate observations and the states generating them
-    double current_s_0 = 0;
-    double current_s_1 = 0;
-    for (size_t i = 0; i < OBSERVATION_COUNT; i++){
+    for (size_t i = 0; i < 20; i++){
+        Sample pi_temp;
+        pi_temp.values.push_back(0.0);
+        pi_temp.values.push_back(0.0);
 
-        double old_state_0 = current_s_0;
-        double old_state_1 = current_s_1;
-
-        if (current_s_1 == min_s_1){
-            // determine the new state of the upper number generator
-            double tice = drand48() * 100;
-            if (tice < 20){
-                current_s_1 = max_s_1;
-            }else{
-                current_s_1 = current_s_1;
-            }
-        }else{ // if (current_s_1 == max_s_1){
-            // determine the new state of the upper number generator
-            double tice = drand48() * 100;
-            if (tice < 20){
-                current_s_1 = min_s_1;
-            }else{
-                current_s_1 = current_s_1;
-            }
-        }
-
-        // Now based on the new state, determine the lower level state
-        double tice = drand48() * 100;
-        if (current_s_1 == min_s_1 && tice < 0.2){
-            current_s_0 = min_s_0;
-        }else if (current_s_1 == min_s_1 && tice>= 0.2){
-            current_s_0 = max_s_0;
-        }else if (current_s_1 == max_s_1 && tice < 0.2){
-            current_s_0 = max_s_0;
-        }else if (current_s_1 == max_s_1 && tice >= 0.2){
-            current_s_0 = min_s_0;
-        }
-
-        // Now current state_0 and state_1 are initialized
-        // Let's make some observations
-        double num_1 = 0;
-        double num_2 = 0;
-        if (current_s_1 == min_s_1 && current_s_0 == min_s_0){
-            double rand = (drand48() * 0.2) - 0.1;
-            num_1 = 1 + rand;
-
-            rand = (drand48() * 0.2) - 0.1;
-            num_2 = 6 + rand;
-        }else if (current_s_1 == min_s_1 && current_s_0 == max_s_0){
-            double rand = (drand48() * 0.2) - 0.1;
-            num_1 = 3 + rand;
-
-            rand = (drand48() * 0.2) - 0.1;
-            num_2 = 6 + rand;
-        }else if (current_s_1 == max_s_1 && current_s_0 == min_s_0){
-            double rand = (drand48() * 0.2) - 0.1;
-            num_1 = 1 + rand;
-
-            rand = (drand48() * 0.2) - 0.1;
-            num_2 = 10 + rand;
-        }else if (current_s_1 == max_s_1 && current_s_0 == max_s_0){
-            double rand = (drand48() * 0.2) - 0.1;
-            num_1 = 3 + rand;
-
-            rand = (drand48() * 0.2) - 0.1;
-            num_2 = 10 + rand;
-        }
-
-        Observation obs_s;
-        obs_s.values.push_back(num_1 + num_2);
-
-        Sample m_1_s;
-        m_1_s.values.push_back(old_state_0);
-        m_1_s.values.push_back(current_s_0);
-        m_1_s.p = 1.0 / OBSERVATION_COUNT;
-
-        Sample m_2_s;
-        m_2_s.values.push_back(old_state_1);
-        m_2_s.values.push_back(current_s_1);
-        m_2_s.p = 1.0 / OBSERVATION_COUNT;
-
-        Sample v_1_s;
-        v_1_s.values.push_back(num_1 + num_2);
-        v_1_s.values.push_back(current_s_0);
-        v_1_s.p = 1.0 / OBSERVATION_COUNT;
-
-        Sample v_2_s;
-        v_2_s.values.push_back(current_s_0);
-        v_2_s.values.push_back(current_s_1);
-        v_2_s.p = 1.0 / OBSERVATION_COUNT;
-
-        // Add the samples to the distribution
-        obs->push_back(obs_s);
-
-        m_0->push_back(m_1_s);
-        m_1->push_back(m_2_s);
-
-        v_0->push_back(v_1_s);
-        v_1->push_back(v_2_s);
+        pi_0->push_back(pi_temp);
     }
 
-    //    LOG(INFO) << "Sizes:";
-    //    LOG(INFO) << "\n"
-    //              << "\tObs:  " << obs->size() << "\n"
-    //              << "\tPI_0: " << pi_0->size() << "\n"
-    //              << "\tM_0:  " << m_0->size() << "\n"
-    //              << "\tV_0:  " << v_0->size() << "\n"
-    //              << "\tPI_1: " << pi_1->size() << "\n"
-    //              << "\tM_1:  " << m_1->size() << "\n"
-    //              << "\tV_1:  " << v_1->size() << "\n";
+    //////////////////////////////////////////////////////////
+    //////////////////////P_1/////////////////////////////////
+    //////////////////////////////////////////////////////////
+    if (!pi_1){
+        LOG(FATAL) << "PI 1 vector was not initialized!";
+    }
+
+    for (size_t i = 0; i < 20; i++){
+        Sample pi_temp;
+        pi_temp.values.push_back(0.0);
+        pi_temp.values.push_back(0.0);
+
+        pi_1->push_back(pi_temp);
+    }
+
+    //////////////////////////////////////////////////////////
+    //////////////////////M_0/////////////////////////////////
+    //////////////////////////////////////////////////////////
+    if (!m_0){
+        LOG(FATAL) << "M 0 vector was not initialized!";
+    }
+
+    ifstream file("/home/sina/Desktop/m_1.txt");
+
+    if (file.is_open()){
+        string line;
+        getline(file, line); // Skip the headers
+
+        while(getline(file, line)){
+            stringstream ssin(line);
+            Sample sample_m;
+
+            while(ssin.good()){
+                string temp;
+                ssin >> temp;
+                sample_m.values.push_back(atof(temp.c_str()));
+            }
+
+            sample_m.values.pop_back();
+            m_0->push_back(sample_m);
+        }
+
+    }else{
+        LOG(FATAL) << "Cannot open M 1 input file!";
+    }
+
+    file.close();
+
+    //////////////////////////////////////////////////////////
+    //////////////////////M_1/////////////////////////////////
+    //////////////////////////////////////////////////////////
+    if (!m_1){
+        LOG(FATAL) << "M 1 vector was not initialized!";
+    }
+
+    file.open("/home/sina/Desktop/m_2.txt");
+
+    if (file.is_open()){
+        string line;
+        getline(file, line); // Skip the headers
+
+        while(getline(file, line)){
+            stringstream ssin(line);
+            Sample sample_m;
+
+            while(ssin.good()){
+                string temp;
+                ssin >> temp;
+                sample_m.values.push_back(atof(temp.c_str()));
+            }
+
+            sample_m.values.pop_back();
+            m_1->push_back(sample_m);
+        }
+
+    }else{
+        LOG(FATAL) << "Cannot open M 2 input file!";
+    }
+
+    file.close();
+
+    //////////////////////////////////////////////////////////
+    //////////////////////V_0/////////////////////////////////
+    //////////////////////////////////////////////////////////
+    if (!v_0){
+        LOG(FATAL) << "V 0 vector was not initialized!";
+    }
+
+    file.open("/home/sina/Desktop/v_1.txt");
+
+    if (file.is_open()){
+        string line;
+        getline(file, line); // Skip the headers
+
+        while(getline(file, line)){
+            stringstream ssin(line);
+            Sample sample_v;
+
+            while(ssin.good()){
+                string temp;
+                ssin >> temp;
+                sample_v.values.push_back(atof(temp.c_str()));
+            }
+
+            sample_v.values.pop_back();
+            v_0->push_back(sample_v);
+        }
+
+    }else{
+        LOG(FATAL) << "Cannot open V 1 input file!";
+    }
+
+    file.close();
+
+    //////////////////////////////////////////////////////////
+    //////////////////////V_1/////////////////////////////////
+    //////////////////////////////////////////////////////////
+    if (!v_1){
+        LOG(FATAL) << "V 1 vector was not initialized!";
+    }
+
+    file.open("/home/sina/Desktop/v_2.txt");
+
+    if (file.is_open()){
+        string line;
+        getline(file, line); // Skip the headers
+
+        while(getline(file, line)){
+            stringstream ssin(line);
+            Sample sample_v;
+
+            while(ssin.good()){
+                string temp;
+                ssin >> temp;
+                sample_v.values.push_back(atof(temp.c_str()));
+            }
+
+            sample_v.values.pop_back();
+            v_1->push_back(sample_v);
+        }
+
+    }else{
+        LOG(FATAL) << "Cannot open V 2 input file!";
+    }
+
+    file.close();
+
+    //////////////////////////////////////////////////////////
+    //////////////////////OBSERVATION/////////////////////////
+    //////////////////////////////////////////////////////////
+    if (!obs){
+        LOG(FATAL) << "Observation vector was NULL!";
+    }
+
+    file.open("/home/sina/Desktop/obs.txt");
+
+    if (file.is_open()){
+        string line;
+        getline(file, line); // Skip the header
+
+        while(getline(file, line)){
+            stringstream ssin(line);
+            Observation sample_obs;
+
+            while(ssin.good()){
+                string temp;
+                ssin >> temp;
+                sample_obs.values.push_back(atof(temp.c_str()));
+            }
+
+            sample_obs.values.pop_back();
+            obs->push_back(sample_obs);
+        }
+
+    }else{
+        LOG(FATAL) << "Cannot open Obs input file!";
+    }
+
+    file.close();
+
 
 }
 
