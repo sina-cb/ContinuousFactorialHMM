@@ -33,7 +33,7 @@ void init_distributions(vector<Observation> * obs,
                         vector<Sample> * pi_0, vector<Sample> * m_0, vector<Sample> * v_0,
                         vector<Sample> * pi_1, vector<Sample> * m_1, vector<Sample> * v_1);
 
-size_t N = 30;
+size_t N = 100;
 size_t MAX_ITERATION = 300;
 size_t OBSERVATION_COUNT = 50;
 double THRESHOLD = 0.5;
@@ -69,16 +69,16 @@ int main(int argc, char** argv){
         ssd << "N: " << N << "\tMAX_ITERATION: " << MAX_ITERATION << "\tOBSERVATION_COUNT: " << OBSERVATION_COUNT
             << "\tTHRESHOLD: " << THRESHOLD << "\trun_number: " << run_number << "\tnumber_of_runs: " << number_of_runs;
         LOG(WARNING) << ssd.str();
-     }
+    }
 
     for (size_t n = 0; n < number_of_runs; n++){
 
-        vector<double> * pi_low_limits_0 = new vector<double>();
+        vector<double> * pi_low_limits_0  = new vector<double>();
         vector<double> * pi_high_limits_0 = new vector<double>();
-        vector<double> * m_low_limits_0 = new vector<double>();
-        vector<double> * m_high_limits_0 = new vector<double>();
-        vector<double> * v_low_limits_0 = new vector<double>();
-        vector<double> * v_high_limits_0 = new vector<double>();
+        vector<double> * m_low_limits_0   = new vector<double>();
+        vector<double> * m_high_limits_0  = new vector<double>();
+        vector<double> * v_low_limits_0   = new vector<double>();
+        vector<double> * v_high_limits_0  = new vector<double>();
 
         {
             Timer tmr;
