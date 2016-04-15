@@ -36,7 +36,7 @@ void init_distributions(vector<Observation> * obs,
 size_t N = 100;
 size_t MAX_ITERATION = 300;
 size_t OBSERVATION_COUNT = 50;
-double THRESHOLD = 0.5;
+double THRESHOLD = 0.8;
 string run_number = "";
 size_t number_of_runs = 1;
 
