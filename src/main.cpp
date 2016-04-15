@@ -282,6 +282,7 @@ void init_m(vector<Sample> *m, int sample_count){
                 sample_m.values.push_back(atof(temp.c_str()));
             }
 
+            sample_m.values.pop_back();
             m->push_back(sample_m);
         }
 
@@ -314,6 +315,7 @@ void init_v(vector<Sample> *v, int sample_count){
                 sample_v.values.push_back(atof(temp.c_str()));
             }
 
+            sample_v.values.pop_back();
             v->push_back(sample_v);
         }
 
