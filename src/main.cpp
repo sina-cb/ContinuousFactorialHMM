@@ -17,7 +17,7 @@ using namespace google;
 
 #define N 100
 #define N_HMM_TEST 100
-#define MAX_ITERATION 20
+#define MAX_ITERATION 100
 #define INIT_OBS_C 100
 #define TEST_OBS_C 50
 #define PI_SAMPLE_C 20
@@ -117,84 +117,53 @@ void use_em_learning(){
         double t1 = tmr.elapsed();
 
         hmm.set_limits(pi_low_limits, pi_high_limits, m_low_limits, m_high_limits, v_low_limits, v_high_limits);
-        hmm.set_distributions(pi, m, v, 0.5);
+        //hmm.set_distributions(pi, m, v, 0.5);
 
-        while (1){
-            vector<Observation> * obs1 = new vector<Observation>;
-            Sampler sampler;
-            Timer tmr;
-            int true_count = 0;
-            for (size_t i = 0; i < observations->size(); i++){
-                for (size_t j = 0; j < i; j++){
-                    obs1->push_back((*observations)[i]);
-                }
-                DETree * forward = hmm.forward(obs1, N_HMM_TEST);
-                Sample big_sample = sampler.sample(forward);
-
-                if (i < v->size() - 1 && abs(big_sample.values[0] - (*v)[i].values[5]) < 0.3
-                        && abs(big_sample.values[1] - (*v)[i].values[6]) < 0.3){
-                    true_count++;
-                }
-                LOG(INFO) << big_sample.values[0] << "\t" <<
-                                                     big_sample.values[1] << "\t" <<
-                                                     big_sample.values[2] << "\t";
-
-            }
-
-            double accur = ((double) true_count / (double) observations->size());
-            LOG(INFO) << "True Count: " << true_count;
-            LOG(INFO) << "Accuracy Check: " << accur;
-
-            if (accur > 0.8){
-                break;
-            }
-
-            hmm.learn_hmm(observations, 1, N);
-        }
+        hmm.learn_hmm_KL(observations, 0.1, MAX_ITERATION, N);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
     }
 
     //Testing the accuracy
-    vector<Observation> * obs = new vector<Observation>;
-    {
-        Sampler sampler;
+//    vector<Observation> * obs = new vector<Observation>;
+//    {
+//        Sampler sampler;
 
-        Timer tmr;
-        double t1 = tmr.elapsed();
+//        Timer tmr;
+//        double t1 = tmr.elapsed();
 
-        //         int tr = 0;
-        //                for (size_t i = 1; i < TEST_OBS_C; i++){
-        //        obs->push_back((*observations)[observations->size() - 3]);
-        //        obs->push_back((*observations)[observations->size() - 2]);
-        obs->push_back((*observations)[7]);
-        DETree * forward = hmm.forward(obs, N_HMM_TEST);
+//        //         int tr = 0;
+//        //                for (size_t i = 1; i < TEST_OBS_C; i++){
+//        //        obs->push_back((*observations)[observations->size() - 3]);
+//        //        obs->push_back((*observations)[observations->size() - 2]);
+//        obs->push_back((*observations)[7]);
+//        DETree * forward = hmm.forward(obs, N_HMM_TEST);
 
-        Sample big_sample = sampler.sample(forward);
-        for (size_t i = 0; i < 5; i++){
-            Sample temp = sampler.sample(forward);
-            LOG(INFO) << "Temp " << i << ":\t"
-                      << temp.values[0] << "\t"
-                      << temp.values[1];
+//        Sample big_sample = sampler.sample(forward);
+//        for (size_t i = 0; i < 5; i++){
+//            Sample temp = sampler.sample(forward);
+//            LOG(INFO) << "Temp " << i << ":\t"
+//                      << temp.values[0] << "\t"
+//                      << temp.values[1];
 
-            big_sample.values[0] = big_sample.values[0] + temp.values[0];
-            big_sample.values[1] = big_sample.values[1] + temp.values[1];
-        }
+//            big_sample.values[0] = big_sample.values[0] + temp.values[0];
+//            big_sample.values[1] = big_sample.values[1] + temp.values[1];
+//        }
 
-        big_sample.values[0] /= 6;
-        big_sample.values[1] /= 6;
+//        big_sample.values[0] /= 6;
+//        big_sample.values[1] /= 6;
 
-        LOG(INFO) << "Big Sample:\t"
-                  << big_sample.values[0] << "\t"
-                  << big_sample.values[1];
-        //        }
+//        LOG(INFO) << "Big Sample:\t"
+//                  << big_sample.values[0] << "\t"
+//                  << big_sample.values[1];
+//        //        }
 
-        //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
+//        //         LOG(INFO) << "Accuracy: " << ((tr / (double) TEST_OBS_C) * 100.0) << "%" << endl;
 
-        double t2 = tmr.elapsed();
-        LOG(INFO) << "Testing the MCHMM time: " << (t2 - t1) << " seconds";
-    }
+//        double t2 = tmr.elapsed();
+//        LOG(INFO) << "Testing the MCHMM time: " << (t2 - t1) << " seconds";
+//    }
 
 }
 
@@ -203,6 +172,7 @@ void use_precollected_samples(){
     vector<Sample> *pi = new vector<Sample>();
     vector<Sample> *m = new vector<Sample>();
     vector<Sample> *v = new vector<Sample>();
+    vector<Observation> * obs = new vector<Observation>;
     {
         Timer tmr;
         double t1 = tmr.elapsed();
@@ -210,6 +180,7 @@ void use_precollected_samples(){
         init_pi(pi, PI_SAMPLE_C);
         init_m(m, M_SAMPLE_C);
         init_v(v, V_SAMPLE_C);
+        init_observations(obs, 1);
 
         LOG(INFO) << "PI size: " << pi->size();
         LOG(INFO) << "M size: " << m->size();
@@ -251,7 +222,6 @@ void use_precollected_samples(){
     }
 
     // Testing the accuracy
-    vector<Observation> * obs = new vector<Observation>;
     {
         Sampler sampler;
 
@@ -284,7 +254,6 @@ void init_pi(vector<Sample> *pi, int sample_count){
 
     for (size_t i = 0; i < 20; i++){
         Sample pi_temp;
-        pi_temp.values.push_back(0.0);
         pi_temp.values.push_back(0.0);
         pi_temp.values.push_back(0.0);
 
@@ -366,20 +335,15 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
     }
 
     // TODO: Add bounds to the vectors here!
-    double accel_min = -0.4;
-    double accel_min_w = -0.1;
+    double accel_min = -0.5;
 
-    double accel_max = 0.4;
-    double accel_max_w = 0.1;
+    double accel_max = 0.5;
 
     double crosswalk_min = 0;
-    double crosswalk_max = 1;
-
-    double turn_point_min = 0;
-    double turn_point_max = 2;
+    double crosswalk_max = 3;
 
     double junction_min = 0;
-    double junction_max = 2;
+    double junction_max = 3;
 
     double wall_min = 0;
     double wall_max = 3.0;
@@ -387,47 +351,37 @@ void init_limits(vector<double> * pi_low_limits, vector<double> * pi_high_limits
     ////////// INIT PI BOUNDS //////////
     pi_low_limits->push_back(accel_min);
     pi_low_limits->push_back(accel_min);
-    pi_low_limits->push_back(accel_min_w);
 
     pi_high_limits->push_back(accel_max);
     pi_high_limits->push_back(accel_max);
-    pi_high_limits->push_back(accel_max_w);
 
 
     ////////// INIT M  BOUNDS //////////
     m_low_limits->push_back(accel_min);
     m_low_limits->push_back(accel_min);
-    m_low_limits->push_back(accel_min_w);
     m_low_limits->push_back(accel_min);
     m_low_limits->push_back(accel_min);
-    m_low_limits->push_back(accel_min_w);
 
     m_high_limits->push_back(accel_max);
     m_high_limits->push_back(accel_max);
-    m_high_limits->push_back(accel_max_w);
     m_high_limits->push_back(accel_max);
     m_high_limits->push_back(accel_max);
-    m_high_limits->push_back(accel_max_w);
 
 
     ////////// INIT V  BOUNDS //////////
     v_low_limits->push_back(crosswalk_min);
-    v_low_limits->push_back(turn_point_min);
     v_low_limits->push_back(junction_min);
     v_low_limits->push_back(wall_min);
     v_low_limits->push_back(wall_min);
     v_low_limits->push_back(accel_min);
     v_low_limits->push_back(accel_min);
-    v_low_limits->push_back(accel_min_w);
 
     v_high_limits->push_back(crosswalk_max);
-    v_high_limits->push_back(turn_point_max);
     v_high_limits->push_back(junction_max);
     v_high_limits->push_back(wall_max);
     v_high_limits->push_back(wall_max);
     v_high_limits->push_back(accel_max);
     v_high_limits->push_back(accel_max);
-    v_high_limits->push_back(accel_max_w);
 }
 
 void init_observations(vector<Observation> * obs, size_t size){

@@ -238,6 +238,8 @@ void MCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, si
     size_t iteration = 0;
     DETree* old_gamma_tree = NULL;
 
+    vector<Sample> test_samples = sampler.uniform_sampling(pi_low_limit, pi_high_limit, 1000);
+
     while (cond){
         vector<Sample> alpha_samples[2];
         vector<Sample> beta_samples[2];
@@ -436,7 +438,6 @@ void MCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, si
 
             if (iteration > 1){ // Do the KL if we have at least on previous HMM parameters set!!!
                 // Generate a lot of samples uniformly
-                vector<Sample> test_samples = sampler.uniform_sampling(pi_low_limit, pi_high_limit, 1000);
 
                 // Find the density estimations for each generated sample
                 vector<double> estimates_old;
@@ -459,6 +460,8 @@ void MCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold, si
 
                 // Compute the KL divergence factor
                 double KLD = KLD_compute(estimates_old, estimates_new);
+
+                LOG(ERROR) << "KLD: " << KLD;
 
                 // If KLD < threshold --> STOP
                 if (KLD < threshold){
