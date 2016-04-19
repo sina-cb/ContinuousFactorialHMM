@@ -125,9 +125,9 @@ int main(int argc, char** argv){
         hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
 #endif
 
-        //hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
+        hmm.learn_hmm_separately_KL(observations, 0.4, MAX_ITERATION, N);
 
-        hmm.learn_hmm_KL(observations, 0.4, MAX_ITERATION, N);
+        //hmm.learn_hmm_KL(observations, 0.4, MAX_ITERATION, N);
 
         double t2 = tmr.elapsed();
         LOG(INFO) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";

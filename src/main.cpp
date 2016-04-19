@@ -141,7 +141,7 @@ int main(int argc, char** argv){
             hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
 #endif
 
-            //hmm.learn_hmm_separately(observations, MAX_ITERATION, N);
+            //size_t converged_at = hmm.learn_hmm_separately_KL(observations, THRESHOLD, MAX_ITERATION, N);
 
             size_t converged_at = hmm.learn_hmm_KL(observations, THRESHOLD, MAX_ITERATION, N);
 
