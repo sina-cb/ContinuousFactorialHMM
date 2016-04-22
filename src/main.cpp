@@ -18,8 +18,6 @@ using namespace google;
 
 #define HMM_TYPE 1
 
-#define INIT_DISTS 1
-
 vector<string> hmm_types = {"Monte Carlo HMM", "Layered Monte Carlo HMM"};
 
 void init_GLOG();
@@ -39,13 +37,14 @@ size_t OBSERVATION_COUNT = 50;
 double THRESHOLD = 0.8;
 string run_number = "";
 size_t number_of_runs = 1;
+size_t experiment_setup_num = 3;
 
 int main(int argc, char** argv){
     init_GLOG();
     LOG(INFO) << "Using \"" << hmm_types[HMM_TYPE] << "\" algorithm.";
     LOG(INFO) << "Testing two number generators' domain";
 
-    if (argc == 7){
+    if (argc == 8){
         LOG(WARNING) << "Using passed arguments";
         N = (size_t) atoi(argv[1]);
         MAX_ITERATION = (size_t) atoi(argv[2]);
@@ -53,21 +52,30 @@ int main(int argc, char** argv){
         THRESHOLD = (double) atof(argv[4]);
         run_number = argv[5];
         number_of_runs = (size_t) atoi(argv[6]);
+        experiment_setup_num = (size_t) atoi(argv[7]);
 
         stringstream ssd;
         ssd << "N: " << N << "\tMAX_ITERATION: " << MAX_ITERATION << "\tOBSERVATION_COUNT: " << OBSERVATION_COUNT
-            << "\tTHRESHOLD: " << THRESHOLD << "\trun_number: " << run_number << "\tnumber_of_runs: " << number_of_runs;
+            << "\tTHRESHOLD: " << THRESHOLD << "\trun_number: " << run_number << "\tnumber_of_runs: " << number_of_runs
+            << "\tEXPERIMENT_SETUP_NUMBER: " << experiment_setup_num;
         LOG(WARNING) << ssd.str();
 
     }else{
         LOG(WARNING) << "Using default arguments";
         LOG(WARNING) << "\n\tIf you want to use the arguments, you should pass the following parameters:\n"
                         "\t\tN(size_t) MAX_ITERATION(size_t) OBSERVATION_COUNT(size_t) THRESHOLD(double) run_number(String) "
-                        "number_of_runs(size_t)\n\n";
-
+                        "number_of_runs(size_t) experiment_setup_number(size_t)\n";
+        LOG(WARNING) << "Experiment setups:\n"
+                        "\t0 --> EM (E') EM (No DISTs INIT)\n"
+                        "\t1 --> EM (E') EM (With DISTs INIT)\n"
+                        "\t2 --> EEMM       (No DISTs INIT)\n"
+                        "\t3 --> EEMM       (With DISTs INIT)\n"
+                        "\t4 --> EM*EM*     (No DISTs INIT)\n"
+                        "\t5 --> EM*EM*     (With DISTs INIT)\n\n";
         stringstream ssd;
         ssd << "N: " << N << "\tMAX_ITERATION: " << MAX_ITERATION << "\tOBSERVATION_COUNT: " << OBSERVATION_COUNT
-            << "\tTHRESHOLD: " << THRESHOLD << "\trun_number: " << run_number << "\tnumber_of_runs: " << number_of_runs;
+            << "\tTHRESHOLD: " << THRESHOLD << "\trun_number: " << run_number << "\tnumber_of_runs: " << number_of_runs
+            << "\tEXPERIMENT_SETUP_NUMBER: " << experiment_setup_num;
         LOG(WARNING) << ssd.str();
     }
 
@@ -136,14 +144,48 @@ int main(int argc, char** argv){
             hmm.set_limits(pi_low_limits_0, pi_high_limits_0, m_low_limits_0, m_high_limits_0, v_low_limits_0, v_high_limits_0, 0);
             hmm.set_limits(pi_low_limits_1, pi_high_limits_1, m_low_limits_1, m_high_limits_1, v_low_limits_1, v_high_limits_1, 1);
 
-#if INIT_DISTS
-            hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
-            hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
-#endif
+            size_t converged_at = 0;
+            switch (experiment_setup_num) {
+            case 0: // EM (E') EM (No DISTs INIT)
+                LOG(INFO) << "EXPERIMENT TYPE " << experiment_setup_num << " --> EM (E') EM (No DISTs INIT)";
+                converged_at = hmm.learn_hmm_KL(observations, THRESHOLD, MAX_ITERATION, N);
+                break;
 
-            //size_t converged_at = hmm.learn_hmm_separately_KL(observations, THRESHOLD, MAX_ITERATION, N);
+            case 1: // EM (E') EM (With DISTs INIT)
+                LOG(INFO) << "EXPERIMENT TYPE " << experiment_setup_num << " --> EM (E') EM (With DISTs INIT)";
+                hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
+                hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
+                converged_at = hmm.learn_hmm_KL(observations, THRESHOLD, MAX_ITERATION, N);
+                break;
 
-            size_t converged_at = hmm.learn_hmm_EEMM_KL(observations, THRESHOLD, MAX_ITERATION, N);
+            case 2: // EEMM       (No DISTs INIT)
+                LOG(INFO) << "EXPERIMENT TYPE " << experiment_setup_num << " --> EEMM       (No DISTs INIT)";
+                converged_at = hmm.learn_hmm_EEMM_KL(observations, THRESHOLD, MAX_ITERATION, N);
+                break;
+
+            case 3: // EEMM       (With DISTs INIT)
+                LOG(INFO) << "EXPERIMENT TYPE " << experiment_setup_num << " --> EEMM       (With DISTs INIT)";
+                hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
+                hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
+                converged_at = hmm.learn_hmm_EEMM_KL(observations, THRESHOLD, MAX_ITERATION, N);
+                break;
+
+            case 4: // EM*EM*     (No DISTs INIT)
+                LOG(INFO) << "EXPERIMENT TYPE " << experiment_setup_num << " --> EM*EM*     (No DISTs INIT)";
+                converged_at = hmm.learn_hmm_separately_KL(observations, THRESHOLD, MAX_ITERATION, N);
+                break;
+
+            case 5: // EM*EM*     (With DISTs INIT)
+                LOG(INFO) << "EXPERIMENT TYPE " << experiment_setup_num << " --> EM*EM*     (With DISTs INIT)";
+                hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
+                hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
+                converged_at = hmm.learn_hmm_separately_KL(observations, THRESHOLD, MAX_ITERATION, N);
+                break;
+
+            default:
+                LOG(FATAL) << "No experiment setup was chosen!!!";
+                break;
+            }
 
             double t2 = tmr.elapsed();
             LOG(WARNING) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";
