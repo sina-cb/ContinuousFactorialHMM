@@ -18,7 +18,7 @@ using namespace google;
 
 #define HMM_TYPE 1
 
-#define USE_EM_ONLY 0
+#define INIT_DISTS 1
 
 vector<string> hmm_types = {"Monte Carlo HMM", "Layered Monte Carlo HMM"};
 
@@ -136,14 +136,14 @@ int main(int argc, char** argv){
             hmm.set_limits(pi_low_limits_0, pi_high_limits_0, m_low_limits_0, m_high_limits_0, v_low_limits_0, v_high_limits_0, 0);
             hmm.set_limits(pi_low_limits_1, pi_high_limits_1, m_low_limits_1, m_high_limits_1, v_low_limits_1, v_high_limits_1, 1);
 
-#if !USE_EM_ONLY
+#if INIT_DISTS
             hmm.set_distributions(pi_0, m_0, v_0, 0.5, 0);
             hmm.set_distributions(pi_1, m_1, v_1, 0.5, 1);
 #endif
 
             //size_t converged_at = hmm.learn_hmm_separately_KL(observations, THRESHOLD, MAX_ITERATION, N);
 
-            size_t converged_at = hmm.learn_hmm_KL(observations, THRESHOLD, MAX_ITERATION, N);
+            size_t converged_at = hmm.learn_hmm_EEMM_KL(observations, THRESHOLD, MAX_ITERATION, N);
 
             double t2 = tmr.elapsed();
             LOG(WARNING) << "Generating the MCHMM time: " << (t2 - t1) << " seconds";

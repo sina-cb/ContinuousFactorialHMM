@@ -29,8 +29,15 @@ public:
                     size_t level);
     void set_layers(size_t layers_count);
 
+    // These two functions are implementing EM(E')EM
     void learn_hmm(vector<Observation> *observations, size_t max_iteration, int N);
     size_t learn_hmm_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N);
+
+    // These two functions are implementing EEMM
+    void learn_hmm_EEMM(vector<Observation> *observations, size_t max_iteration, int N);
+    size_t learn_hmm_EEMM_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N);
+
+    // These two functions are implementing EM*EM*
     void learn_hmm_separately(vector<Observation> *observations, size_t max_iteration, int N);
     size_t learn_hmm_separately_KL(vector<Observation> *observations, double threshold, size_t max_iteration, int N); // Not implemented
 
