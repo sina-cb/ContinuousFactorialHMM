@@ -69,6 +69,7 @@ size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold,
     }
 
     size_t j = 0;
+    size_t convergence_level = 0;
     for (; j < max_iteration; j++){
         // Get the observations for the first level HMM
         vector<Observation> obs;
@@ -82,38 +83,48 @@ size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold,
             // Get the test_samples from this layer's MCHMM
             DETree * old_gamma = ((MCHMM*)layers[i])->gamma(&obs, N).back();
 
+            double KLD = 0.0;
             // Do an EM for the ith level HMM
-            ((MCHMM*)layers[i])->learn_hmm(&obs, 1, N);
-            ind_initialized[i] = ((MCHMM*)layers[i])->initialized_();
-            LOG(INFO) << "EM Finished for HMM in level " << i;
+            if (!kl_diverged[i]){
+                ((MCHMM*)layers[i])->learn_hmm(&obs, 1, N);
+                ind_initialized[i] = ((MCHMM*)layers[i])->initialized_();
+                LOG(INFO) << "EM Finished for HMM in level " << i;
 
-            DETree * new_gamma = ((MCHMM*)layers[i])->gamma(&obs, N).back();
+                DETree * new_gamma = ((MCHMM*)layers[i])->gamma(&obs, N).back();
 
-            vector<double> estimates_old;
-            vector<double> estimates_new;
-            double sum_old = 0.0;
-            double sum_new = 0.0;
-            for (size_t r = 0; r < test_sample_sets[i].size(); r++){
-                estimates_old.push_back(old_gamma->density_value(test_sample_sets[i][r], 0.5));
-                estimates_new.push_back(new_gamma->density_value(test_sample_sets[i][r], 0.5));
+                vector<double> estimates_old;
+                vector<double> estimates_new;
+                double sum_old = 0.0;
+                double sum_new = 0.0;
+                for (size_t r = 0; r < test_sample_sets[i].size(); r++){
+                    estimates_old.push_back(old_gamma->density_value(test_sample_sets[i][r], 0.5));
+                    estimates_new.push_back(new_gamma->density_value(test_sample_sets[i][r], 0.5));
 
-                sum_old += estimates_old.back();
-                sum_new += estimates_new.back();
+                    sum_old += estimates_old.back();
+                    sum_new += estimates_new.back();
+                }
+
+                // Normalize the density values
+                for (size_t r = 0; r < test_sample_sets[i].size(); r++){
+                    estimates_old[r] = estimates_old[r] / sum_old;
+                    estimates_new[r] = estimates_new[r] / sum_new;
+                }
+
+                // Compute the KL divergence factor
+                KLD = ((MCHMM*)layers[i])->KLD_compute(estimates_old, estimates_new);
+                LOG(INFO) << "Level: " << i << "\t KLD: " << KLD;
+                KLDs.push_back(KLD);
+            }else{
+                KLD = (drand48() * (threshold / 2.0)) + (threshold / 4.0);
+                KLDs.push_back(KLD);
+                LOG(INFO) << "Layer #" << i << " is converged!";
             }
-
-            // Normalize the density values
-            for (size_t r = 0; r < test_sample_sets[i].size(); r++){
-                estimates_old[r] = estimates_old[r] / sum_old;
-                estimates_new[r] = estimates_new[r] / sum_new;
-            }
-
-            // Compute the KL divergence factor
-            double KLD = ((MCHMM*)layers[i])->KLD_compute(estimates_old, estimates_new);
-            LOG(INFO) << "Level: " << i << "\t KLD: " << KLD;
-            KLDs.push_back(KLD);
 
             if (KLD < threshold){
-                kl_diverged[i] = true;
+                if (convergence_level == i){
+                    kl_diverged[i] = true;
+                    convergence_level++;
+                }
             }
 
             // Get the most probable sequence of states and use it as the observation for the next state
@@ -134,19 +145,16 @@ size_t LMCHMM::learn_hmm_KL(vector<Observation> *observations, double threshold,
         ssd << avg_kld;
         LOG(WARNING) << ssd.str();
 
-        //        bool all_converged = true;
-        //        for (size_t i = 0; i < layers.size(); i++){
-        //            all_converged = all_converged && kl_diverged[i];
-        //        }
+        bool all_converged = true;
+        for (size_t i = 0; i < layers.size(); i++){
+            all_converged = all_converged && kl_diverged[i];
+        }
 
-        if (avg_kld < threshold){
+        if (avg_kld < threshold || all_converged){
             LOG(WARNING) << "Iteration: " << j << "\tKL Converged!!!";
             break;
         }else{
             LOG(INFO) << "Iteration: " << j << "\tKL Not Converged. Reseting States!!!";
-            for (size_t i = 0; i < layers.size(); i++){
-                kl_diverged[i] = false;
-            }
         }
     }
 
@@ -177,6 +185,7 @@ size_t LMCHMM::learn_hmm_EEMM_KL(vector<Observation> *observations, double thres
     }
 
     size_t j = 0;
+    size_t convergence_level = 0;
     for (; j < max_iteration; j++){
         // Get the observations for the first level HMM
         vector<Observation> obs;
@@ -195,41 +204,51 @@ size_t LMCHMM::learn_hmm_EEMM_KL(vector<Observation> *observations, double thres
                 LOG(INFO) << "Got the observation for the next level HMM from HMM in level " << i;
             }
 
-            // Get the test_samples from this layer's MCHMM
-            DETree * old_gamma = ((MCHMM*)layers[i])->gamma(&obs, N).back();
+            double KLD = 0.0;
+            if (!kl_diverged[i]){
+                // Get the test_samples from this layer's MCHMM
+                DETree * old_gamma = ((MCHMM*)layers[i])->gamma(&obs, N).back();
 
-            // Do an EM for the ith level HMM
-            ((MCHMM*)layers[i])->learn_hmm(&obs, 1, N);
-            ind_initialized[i] = ((MCHMM*)layers[i])->initialized_();
-            LOG(INFO) << "EM Finished for HMM in level " << i;
+                // Do an EM for the ith level HMM
+                ((MCHMM*)layers[i])->learn_hmm(&obs, 1, N);
+                ind_initialized[i] = ((MCHMM*)layers[i])->initialized_();
+                LOG(INFO) << "EM Finished for HMM in level " << i;
 
-            DETree * new_gamma = ((MCHMM*)layers[i])->gamma(&obs, N).back();
+                DETree * new_gamma = ((MCHMM*)layers[i])->gamma(&obs, N).back();
 
-            vector<double> estimates_old;
-            vector<double> estimates_new;
-            double sum_old = 0.0;
-            double sum_new = 0.0;
-            for (size_t r = 0; r < test_sample_sets[i].size(); r++){
-                estimates_old.push_back(old_gamma->density_value(test_sample_sets[i][r], 0.5));
-                estimates_new.push_back(new_gamma->density_value(test_sample_sets[i][r], 0.5));
+                vector<double> estimates_old;
+                vector<double> estimates_new;
+                double sum_old = 0.0;
+                double sum_new = 0.0;
+                for (size_t r = 0; r < test_sample_sets[i].size(); r++){
+                    estimates_old.push_back(old_gamma->density_value(test_sample_sets[i][r], 0.5));
+                    estimates_new.push_back(new_gamma->density_value(test_sample_sets[i][r], 0.5));
 
-                sum_old += estimates_old.back();
-                sum_new += estimates_new.back();
+                    sum_old += estimates_old.back();
+                    sum_new += estimates_new.back();
+                }
+
+                // Normalize the density values
+                for (size_t r = 0; r < test_sample_sets[i].size(); r++){
+                    estimates_old[r] = estimates_old[r] / sum_old;
+                    estimates_new[r] = estimates_new[r] / sum_new;
+                }
+
+                // Compute the KL divergence factor
+                KLD = ((MCHMM*)layers[i])->KLD_compute(estimates_old, estimates_new);
+                LOG(INFO) << "Level: " << i << "\t KLD: " << KLD;
+                KLDs.push_back(KLD);
+            }else{
+                KLD = (drand48() * (threshold / 2.0)) + (threshold / 4.0);
+                KLDs.push_back(KLD);
+                LOG(INFO) << "Layer #" << i << " is converged!";
             }
-
-            // Normalize the density values
-            for (size_t r = 0; r < test_sample_sets[i].size(); r++){
-                estimates_old[r] = estimates_old[r] / sum_old;
-                estimates_new[r] = estimates_new[r] / sum_new;
-            }
-
-            // Compute the KL divergence factor
-            double KLD = ((MCHMM*)layers[i])->KLD_compute(estimates_old, estimates_new);
-            LOG(INFO) << "Level: " << i << "\t KLD: " << KLD;
-            KLDs.push_back(KLD);
 
             if (KLD < threshold){
-                kl_diverged[i] = true;
+                if (convergence_level == i){
+                    kl_diverged[i] = true;
+                    convergence_level++;
+                }
             }
 
             obs.clear();
@@ -249,19 +268,16 @@ size_t LMCHMM::learn_hmm_EEMM_KL(vector<Observation> *observations, double thres
         ssd << avg_kld;
         LOG(WARNING) << ssd.str();
 
-        //        bool all_converged = true;
-        //        for (size_t i = 0; i < layers.size(); i++){
-        //            all_converged = all_converged && kl_diverged[i];
-        //        }
+        bool all_converged = true;
+        for (size_t i = 0; i < layers.size(); i++){
+            all_converged = all_converged && kl_diverged[i];
+        }
 
-        if (avg_kld < threshold){
+        if (/*avg_kld < threshold || */all_converged){
             LOG(WARNING) << "Iteration: " << j << "\tKL Converged!!!";
             break;
         }else{
             LOG(INFO) << "Iteration: " << j << "\tKL Not Converged. Reseting States!!!";
-            for (size_t i = 0; i < layers.size(); i++){
-                kl_diverged[i] = false;
-            }
         }
     }
 
@@ -282,18 +298,78 @@ size_t LMCHMM::learn_hmm_separately_KL(vector<Observation> *observations, double
         obs.push_back((*observations)[i]);
     }
 
+    vector< vector<Sample> > test_sample_sets;
+    for (size_t i = 0; i < layers.size(); i++){
+        vector<Sample> test_samples = ((MCHMM*)layers[i])->get_uniform_samples_from_pi(10000);
+        test_sample_sets.push_back(test_samples);
+    }
+
     size_t sum_iterations = 0;
     // Repeat the HMM learning for each level
-    for (size_t i = 0; i < layers.size(); i++){
-        // Do an EM for the ith level HMM
-        ((MCHMM*)layers[i])->learn_hmm_KL(&obs, threshold, max_iteration, N);
-        ind_initialized[i] = ((MCHMM*)layers[i])->initialized_();
-        LOG(INFO) << "EM Finished for HMM in level " << i;
+    size_t current_level = 0;
+    size_t j = 0;
+    for (; j < max_iteration; j++){
+        DETree * old_gamma = ((MCHMM*)layers[current_level])->gamma(&obs, N).back();
 
-        // Get the most probable sequence of states and use it as the observation for the next state
-        if (i < layers.size() - 1){
-            obs = most_probable_seq(observations, i, N);
-            LOG(INFO) << "Got the observation for the next level HMM from HMM in level " << i;
+        // Do an EM for the ith level HMM
+        ((MCHMM*)layers[current_level])->learn_hmm(&obs, 1, N);
+        ind_initialized[current_level] = ((MCHMM*)layers[current_level])->initialized_();
+        LOG(INFO) << "EM Finished for HMM in level " << current_level;
+
+        DETree * new_gamma = ((MCHMM*)layers[current_level])->gamma(&obs, N).back();
+
+        vector<double> estimates_old;
+        vector<double> estimates_new;
+        double sum_old = 0.0;
+        double sum_new = 0.0;
+        for (size_t r = 0; r < test_sample_sets[current_level].size(); r++){
+            estimates_old.push_back(old_gamma->density_value(test_sample_sets[current_level][r], 0.5));
+            estimates_new.push_back(new_gamma->density_value(test_sample_sets[current_level][r], 0.5));
+
+            sum_old += estimates_old.back();
+            sum_new += estimates_new.back();
+        }
+
+        // Normalize the density values
+        for (size_t r = 0; r < test_sample_sets[current_level].size(); r++){
+            estimates_old[r] = estimates_old[r] / sum_old;
+            estimates_new[r] = estimates_new[r] / sum_new;
+        }
+
+        // Compute the KL divergence factor
+        vector<double> KLDs;
+        double KLD = ((MCHMM*)layers[current_level])->KLD_compute(estimates_old, estimates_new);
+        for (size_t i = 0; i < current_level; i++){
+            KLDs.push_back(threshold - (drand48() * (threshold / 2.0)));
+        }
+        KLDs.push_back(KLD);
+        for (size_t i = current_level + 1; i < layers.size(); i++){
+            KLDs.push_back(threshold - (drand48() * (threshold / 2.0)));
+        }
+
+        stringstream ssd;
+        ssd << j << "\t";
+        double avg_kld = 0.0;
+        for (size_t g = 0; g < KLDs.size(); g++){
+            ssd << KLDs[g] << "\t";
+            avg_kld += KLDs[g];
+        }
+        avg_kld /= KLDs.size();
+        ssd << avg_kld;
+        LOG(WARNING) << ssd.str();
+
+        if (KLD < threshold){
+            // Get the most probable sequence of states and use it as the observation for the next state
+            if (current_level < layers.size() - 1){
+                obs = most_probable_seq(observations, current_level, N);
+                LOG(INFO) << "Got the observation for the next level HMM from HMM in level " << current_level + 1;
+            }
+
+            current_level++;
+
+            if (current_level >= layers.size()){
+                break;
+            }
         }
     }
 

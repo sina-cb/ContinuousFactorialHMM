@@ -34,10 +34,10 @@ void init_distributions(vector<Observation> * obs,
 size_t N = 100;
 size_t MAX_ITERATION = 300;
 size_t OBSERVATION_COUNT = 50;
-double THRESHOLD = 0.8;
+double THRESHOLD = .7;
 string run_number = "";
 size_t number_of_runs = 1;
-size_t experiment_setup_num = 3;
+size_t experiment_setup_num = 5;
 
 int main(int argc, char** argv){
     init_GLOG();
